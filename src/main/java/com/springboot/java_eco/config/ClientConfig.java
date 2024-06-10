@@ -7,7 +7,6 @@ import org.springframework.web.client.RestTemplate;
 public class ClientConfig {
     @Bean
     public RestTemplate restTemplate() {
-        System.out.println("테스트");
         return new RestTemplate();
     }
 
