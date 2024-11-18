@@ -47,7 +47,7 @@ public class CompanyController {
 
         List<Company> selectedTotalCompany = companyService.getCompany(commonInfoSearchDto);
 
-        LOGGER.info("[getTotalCompany] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
+        LOGGER.info("[getCompany] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
 
         return ResponseEntity.status(HttpStatus.OK).body(selectedTotalCompany);
 
@@ -59,7 +59,7 @@ public class CompanyController {
 
         List<Company> selectedTotalCustomer = companyService.getCustomer(commonInfoSearchDto);
 
-        LOGGER.info("[getTotalCompany] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
+        LOGGER.info("[customer_select] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
 
         return ResponseEntity.status(HttpStatus.OK).body(selectedTotalCustomer);
 
