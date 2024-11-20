@@ -134,7 +134,7 @@ public class WorkTaskDAOImpl implements WorkTaskDAO {
 
         if(uid != null){
             // 제조지시에 맞는 BOM 자재를 검색해서 save 해야함
-            List<Bom> selectedBom = bomRepository.findByMain(bom.getMain());
+            List<Bom> selectedBom = bomRepository.findByMain(bom.getUid());
 
             if(selectedBom != null && !selectedBom.isEmpty()){
                 for(Bom insertBom :selectedBom){

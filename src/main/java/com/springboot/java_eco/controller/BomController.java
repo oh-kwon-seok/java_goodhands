@@ -35,7 +35,7 @@ public class BomController {
 
         List<Bom> selectedTotalBom = bomService.getTotalBom(commonInfoSearchDto);
 
-        LOGGER.info("[getTotalBom] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
+        LOGGER.info("[getTotalBom222] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
 
         return ResponseEntity.status(HttpStatus.OK).body(selectedTotalBom);
 
@@ -47,7 +47,7 @@ public class BomController {
 
         List<Bom> selectedTotalBom = bomService.getBom(commonInfoSearchDto);
 
-        LOGGER.info("[getTotalBom] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
+        LOGGER.info("[getTotalBom111] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
 
         return ResponseEntity.status(HttpStatus.OK).body(selectedTotalBom);
 

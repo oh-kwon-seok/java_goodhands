@@ -98,7 +98,7 @@ public class ItemRepositoryCustomImpl extends QuerydslRepositorySupport implemen
 
         QItem item = QItem.item;
 
-        Predicate type = item.type_code.eq("원료");
+        Predicate type = item.type_code.eq("원자재");
 
         List<Item> itemList = from(item)
                 .select(item)
