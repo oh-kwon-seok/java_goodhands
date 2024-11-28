@@ -209,7 +209,7 @@ public class BomDAOImpl implements BomDAO {
         Company company = companyRepository.findByUid(bomDto.getCompany_uid());
         Item item = itemRepository.findByUid(bomDto.getItem_uid());
 
-        Optional<Bom> selectedBom = Optional.ofNullable(bomRepository.findByCodeAndMainAndCompanyAndUsed(bomDto.getCode(),0L, company, 1L));
+        Optional<Bom> selectedBom = Optional.ofNullable(bomRepository.findByUid(bomDto.getUid()));
 
 
         Bom updatedBom;

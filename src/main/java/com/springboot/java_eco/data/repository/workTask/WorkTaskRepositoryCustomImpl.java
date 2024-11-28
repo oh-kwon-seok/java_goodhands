@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Component
@@ -35,6 +36,15 @@ public class WorkTaskRepositoryCustomImpl extends QuerydslRepositorySupport impl
         LocalDateTime start_date = commonSearchDto.getStart_date();
         LocalDateTime end_date = commonSearchDto.getEnd_date();
 
+
+        // DateTimeFormatter를 사용하여 형식을 지정 (YYYY-MM-DD HH:mm:ss 형식으로 변환)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+// work_start_date가 String 컬럼이라고 가정하고 해당 값을 비교
+        String start_date_str = start_date.format(formatter);
+        String end_date_str = end_date.format(formatter);
+
+
         BooleanBuilder builder = new BooleanBuilder();
 
 
@@ -50,14 +60,17 @@ public class WorkTaskRepositoryCustomImpl extends QuerydslRepositorySupport impl
             }
         }
 
+        LOGGER.info("msg : {}",start_date_str);
+        LOGGER.info("msg2 : {}",end_date_str);
+        //Predicate dateRange = workTask.created.between(start_date, end_date);
+        Predicate dateRange = workTask.work_start_date.between(start_date_str, end_date_str); // work_start_date 컬럼이 String 타입이라 가정
 
-        Predicate dateRange = workTask.created.between(start_date, end_date);
         Predicate predicate = builder.getValue();
 
         List<WorkTask> workTaskList = from(workTask)
                 .select(workTask)
                 .where(predicate,dateRange)
-                .orderBy(workTask.created.desc()) // WorkTask by created field in descending workTask
+                .orderBy(workTask.work_start_date.desc()) // WorkTask by created field in descending workTask
                 .fetch();
         return workTaskList;
 
