@@ -507,6 +507,9 @@ public class BomDAOImpl implements BomDAO {
                         // 메인 BOM이 아니라면 해당 서브 BOM 진행
                         Optional<Bom> selectedBom = Optional.ofNullable(bomRepository.findByCodeAndMainAndCompanyAndUsed(mainCode, 0L, company, 1L));
 
+                        LOGGER.info("진행한 BOM: {}",selectedBom);
+                        LOGGER.info("진행한 BOM: {}",selectedBom.isPresent());
+
                         if (selectedBom.isPresent()) { // 메인 BOM이 존재하면 진행
 
                             Bom bom = selectedBom.get();
@@ -514,12 +517,19 @@ public class BomDAOImpl implements BomDAO {
                             Long uid = bom.getUid();
                             // 이제 첫번째 뎁스부터 체크
 
-                            Optional<Bom> selectedParentBom = Optional.ofNullable(bomRepository.findByCodeAndCompanyAndUsed(parentCode, company, 1L));
+
+                            LOGGER.info("페어런트 BOM: {}",uid);
+                            LOGGER.info("페어런트 코드: {}",parentCode);
+
+                            Optional<Bom> selectedParentBom = Optional.ofNullable(bomRepository.findByCodeAndCompanyAndUsed(parentCode,company, 1L));
 
 
                                 Bom parentBom = selectedParentBom.get();
+
                                 // Bom 객체를 이용하여 추가 작업 수행 해당
                                 Item item = itemRepository.findByCodeAndUsedAndCompany(itemCode, 1L, company);
+
+
                                 Bom subBom = new Bom();
                                 subBom.setCompany(company);
                                 subBom.setItem(item);

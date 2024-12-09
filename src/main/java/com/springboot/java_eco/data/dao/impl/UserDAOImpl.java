@@ -71,12 +71,15 @@ public class UserDAOImpl implements UserDAO {
             String password = String.valueOf(data.get("password"));
 
             Company company = companyRepository.findByCode(companyCode);
-
-            LOGGER.info("흐흐흐 : {}",name);
+            LOGGER.info("컴퍼니 : {}",company);
+            LOGGER.info("이름 : {}",name);
             LOGGER.info("ID라능 : {}",id);
             if (company != null) {
                 Employment employment = employmentRepository.findByNameAndCompanyAndUsed(employmentName, company,1L);
                 Department department = departmentRepository.findByNameAndCompanyAndUsed(departmentName, company, 1L);
+
+                LOGGER.info("임플 : {}",employment);
+                LOGGER.info("디파트 : {}",department);
                 if(employment != null && department != null){
                     Optional<User> selectedUser = Optional.ofNullable(userRepository.findByIdAndCompanyAndEmploymentAndDepartment(id,company,employment,department));
 
@@ -98,18 +101,6 @@ public class UserDAOImpl implements UserDAO {
                                 .used(1)
                                 .build();
 
-
-//                        user.setId(id);
-//                        user.setCompany(company);
-//                        user.setEmployment(employment);
-//                        user.setDepartment(department);
-//                        user.setName(name);
-//                        user.setEmail(email);
-//                        user.setPhone(phone);
-//                        user.setPassword(passwordEncoder.encode(password));
-//
-//                        user.setUsed(1);
-//                        user.setUpdated(LocalDateTime.now());
                         userRepository.save(user);
                     } else {  // 해당 데이터가 없으면 추가
                         LOGGER.info("데이터없음 ");
@@ -141,7 +132,7 @@ public class UserDAOImpl implements UserDAO {
 
             } else {
                 // Company가 존재하지 않을 경우 처리
-                return "User excelupload Fail";
+                return "company fail";
             }
 
             // 예시로 이름과 수량이 모두 일치하는 Product를 찾는 메서드를 가정

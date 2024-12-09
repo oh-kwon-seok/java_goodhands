@@ -111,7 +111,7 @@ public class SignController {
         LOGGER.info("LIST : {}",requestList);
 
         signService.excelUploadUser(requestList);
-        return ResponseEntity.status(HttpStatus.OK).body("정상적으로 삭제되었습니다.");
+        return ResponseEntity.status(HttpStatus.OK).body("정상적으로 등록되었습니다.");
     }
 
 
