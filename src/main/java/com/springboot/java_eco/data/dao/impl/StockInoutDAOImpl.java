@@ -298,6 +298,8 @@ public class StockInoutDAOImpl implements StockInoutDAO {
             Optional<StockInout> selectedStockInout = Optional.ofNullable(stockInoutRepository.findByUid(uid));
             if (selectedStockInout.isPresent()) {
                 StockInout stockInout = selectedStockInout.get();
+
+
                 stockInoutRepository.delete(stockInout);
             } else {
                 throw new Exception("StockInout with UID " + uid + " not found.");

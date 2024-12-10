@@ -35,7 +35,7 @@ public class ShipOrderRepositoryCustomImpl extends QuerydslRepositorySupport imp
         String search_text = commonSearchDto.getSearch_text();
         LocalDateTime start_date = commonSearchDto.getStart_date();
         LocalDateTime end_date = commonSearchDto.getEnd_date();
-
+        LOGGER.info("custom : {}",end_date);
         BooleanBuilder builder = new BooleanBuilder();
 
 
