@@ -405,26 +405,39 @@ public class BomDAOImpl implements BomDAO {
 //    }
 
     @Override
-    public String deleteBom(List<Map<String, Object>> requestList) throws Exception {
+    public String deleteBom(List<Map<String, Object>> requestList) {
+            // requestList에서 각 데이터를 순회하면서 처리
+            String test = "SUCCESS";
+            for (Map<String, Object> data : requestList) {
+                Long uid = Long.valueOf(String.valueOf(data.get("uid")));
 
-        for (Map<String, Object> data : requestList) {
+                // BOM 객체가 존재하는지 확인
+                Bom selectedBom = bomRepository.findById(uid).orElse(null);
 
+                if (selectedBom != null) {
+                    // BOM 객체 삭제
+                    try {
+                        bomRepository.delete(selectedBom);
+                        List<Bom> deletedData = bomRepository.findByMain(uid);
+                        if (deletedData != null && !deletedData.isEmpty()) {
+                            bomRepository.deleteAll(deletedData);
+                        }
+                    } catch (Exception e) {
 
+                        test = "FAIL";
+                        LOGGER.info("액션 : {},", test);
+                    }
+                } else {
 
-            Long uid = Long.valueOf(String.valueOf(data.get("uid")));
-
-            Bom selectedBom = bomRepository.findById(uid).orElse(null);
-
-            if (selectedBom != null) {
-                bomRepository.delete(selectedBom);
-                List<Bom> deletedData = bomRepository.findByMain(uid);
-                bomRepository.deleteAll(deletedData);
-
+                }
             }
+            LOGGER.info("LOGGER : {}",test);
+            return test;
 
-        }
-        return "Items uploaded successfully";
+
     }
+
+
 
 
     @Override

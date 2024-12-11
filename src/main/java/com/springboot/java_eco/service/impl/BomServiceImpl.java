@@ -8,6 +8,8 @@ import com.springboot.java_eco.data.entity.Bom;
 import com.springboot.java_eco.service.BomService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,9 +45,15 @@ public class BomServiceImpl implements BomService {
         return bomDAO.updateBom(bomDto);
     }
     @Override
-    public void deleteBom(List<Map<String, Object>> requestList) throws Exception {
-        bomDAO.deleteBom(requestList);
+    public String deleteBom(List<Map<String, Object>> requestList) throws Exception {
+            String result = bomDAO.deleteBom(requestList);
+        if ("SUCCESS".equals(result)) {
+            return "SUCCESS";
+        } else {
+            return "FAIL";
+        }
     }
+
     @Override
     public void excelUploadBom(List<Map<String, Object>> requestList) throws Exception {
         bomDAO.excelUploadBom(requestList);

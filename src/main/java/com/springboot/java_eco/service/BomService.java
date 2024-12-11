@@ -23,7 +23,7 @@ public interface BomService {
     CommonResultDto updateBom(BomDto bomDto) throws Exception;
 
 
-    void deleteBom(List<Map<String, Object>> requestList) throws Exception;
+    String deleteBom(List<Map<String, Object>> requestList) throws Exception;
 
     void excelUploadBom(List<Map<String, Object>> requestList) throws Exception;
 

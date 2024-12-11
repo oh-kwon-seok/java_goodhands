@@ -77,10 +77,15 @@ public class BomController {
     @PostMapping(value= "/delete", consumes = "application/json", produces = "application/json")
     public ResponseEntity<String> deleteBom(@RequestBody Map<String, List<Map<String, Object>>> requestMap) throws Exception {
         List<Map<String, Object>> requestList = requestMap.get("data");
-        LOGGER.info("LIST555 : {}",requestList);
 
-        bomService.deleteBom(requestList);
-        return ResponseEntity.status(HttpStatus.OK).body("정상적으로 삭제되었습니다.");
+
+        String result = bomService.deleteBom(requestList);
+        LOGGER.info("result : {}",result);
+        if ("SUCCESS".equals(result)) {
+            return ResponseEntity.status(HttpStatus.OK).body("SUCCESS");
+        } else {
+            return ResponseEntity.status(HttpStatus.OK).body("FAIL");
+        }
     }
 
     @PostMapping(value= "/excel_upload", consumes = "application/json", produces = "application/json")
