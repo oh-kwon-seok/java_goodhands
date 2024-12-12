@@ -128,7 +128,7 @@ public class StockInoutDAOImpl implements StockInoutDAO {
                 StockInoutSub insertStockInoutSub = stockInoutSubRepository.save(stockInoutSub);
                 Long stockInoutSubUid = insertStockInoutSub.getUid();
                 if(stockInoutSubUid != null){
-                    if("입고".equals(stockInoutDto.getDoc_type())){
+
                         String lot = stockInoutSubData.get("lot").toString();
                         Optional<Stock> selectedStock = Optional.ofNullable(stockRepository.findByLotAndItemAndCompanyAndFactoryAndFactorySub(lot, stockInoutSub.getItem(), company, stockInoutSub.getFactory(), stockInoutSub.getFactorySub()));
                         if(selectedStock.isPresent()){ // 기존 재고에 해당 LOT 및 공장,랙까지 동일하다면 해당 재고에 + 해서 업데이트 해줌
@@ -154,9 +154,9 @@ public class StockInoutDAOImpl implements StockInoutDAO {
                                 stockRecord.setLot(stockInoutSub.getLot());
                                 stockRecord.setQty(stockInoutSub.getQty());
                                 stockRecord.setUnit(stockInoutSub.getUnit());
-                                stockRecord.setType("입고");
+                                stockRecord.setType(stockInoutDto.getStatus());
                                 stockRecord.setStatus("가용");
-                                stockRecord.setReason("");
+                                stockRecord.setReason(stockInoutDto.getDoc_type());
                                 stockRecord.setCreated(LocalDateTime.now());
 
                                 StockRecord insertStockRecord = stockRecordRepository.save(stockRecord);
@@ -202,9 +202,9 @@ public class StockInoutDAOImpl implements StockInoutDAO {
                                 stockRecord.setLot(stockInoutSub.getLot());
                                 stockRecord.setQty(stockInoutSub.getQty());
                                 stockRecord.setUnit(stockInoutSub.getUnit());
-                                stockRecord.setType("입고");
+                                stockRecord.setType(stockInoutDto.getStatus());
                                 stockRecord.setStatus("가용");
-                                stockRecord.setReason("");
+                                stockRecord.setReason(stockInoutDto.getDoc_type());
                                 stockRecord.setCreated(LocalDateTime.now());
 
                                 StockRecord insertStockRecord = stockRecordRepository.save(stockRecord);
@@ -226,7 +226,7 @@ public class StockInoutDAOImpl implements StockInoutDAO {
                         }
 
 
-                    }
+
 
                 }
 
