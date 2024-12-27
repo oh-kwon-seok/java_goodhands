@@ -28,5 +28,7 @@ public class Sensor extends BaseEntity{
     @Column(nullable = false)
     private String type; // 온도/습도/전자저울/PH측정  -> TEMP    / HUMI   /  WEIGHT    // PH
 
+    @Column(nullable = false)
+    private String comment; // 코멘트
 
 }

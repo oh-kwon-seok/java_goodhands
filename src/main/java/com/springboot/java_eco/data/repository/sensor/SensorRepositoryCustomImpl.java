@@ -63,6 +63,7 @@ public class SensorRepositoryCustomImpl extends QuerydslRepositorySupport implem
         List<Sensor> sensorList = from(sensor)
                 .select(sensor)
                 .where(predicate,dateRange)
+                .orderBy(sensor.updated.desc())
                 .fetch();
 
         return sensorList;

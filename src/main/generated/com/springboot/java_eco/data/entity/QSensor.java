@@ -23,6 +23,8 @@ public class QSensor extends EntityPathBase<Sensor> {
 
     public final StringPath code = createString("code");
 
+    public final StringPath comment = createString("comment");
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> created = _super.created;
 
