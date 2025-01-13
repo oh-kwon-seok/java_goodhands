@@ -44,6 +44,8 @@ public class QItem extends EntityPathBase<Item> {
 
     public final StringPath description = createString("description");
 
+    public final StringPath file_path = createString("file_path");
+
     public final StringPath hs_code = createString("hs_code");
 
     public final StringPath image_url = createString("image_url");

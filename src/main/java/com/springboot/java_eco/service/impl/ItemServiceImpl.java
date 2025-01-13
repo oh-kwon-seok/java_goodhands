@@ -8,6 +8,7 @@ import com.springboot.java_eco.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -37,14 +38,14 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item saveItem(ItemDto ItemDto) throws Exception {
+    public Item saveItem(ItemDto ItemDto, MultipartFile file_url) throws Exception {
 
-        return ItemDAO.insertItem(ItemDto);
+        return ItemDAO.insertItem(ItemDto,file_url);
 
     }
     @Override
-    public Item updateItem(ItemDto ItemDto) throws Exception {
-        return ItemDAO.updateItem(ItemDto);
+    public Item updateItem(ItemDto ItemDto,MultipartFile file_url) throws Exception {
+        return ItemDAO.updateItem(ItemDto,file_url);
     }
     @Override
     public void deleteItem(List<Long> uid) throws Exception {

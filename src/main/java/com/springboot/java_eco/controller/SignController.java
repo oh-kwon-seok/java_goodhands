@@ -92,14 +92,13 @@ public class SignController {
     @PostMapping(value= "/sign-in", consumes = "application/json", produces = "application/json")
     public SignInResultDto signIn(
             @RequestBody User user, HttpServletRequest request
-            ) throws RuntimeException {
+    ) throws RuntimeException {
 
         LOGGER.info("[signIn] 로그인을 시도하고 있습니다.id: {}, pw: ****", user.getId());
         LOGGER.info("[IP정보] 로그인을 시도하고 있습니다.IP: {}", request.getRemoteAddr());
 
         SignInResultDto signInResultDto = signService.signIn(user.getId(), user.getPassword(),request.getRemoteAddr());
         if(signInResultDto.getCode() == 0){
-            sendLogData("DO6001",user.getId());
             LOGGER.info("[signIn] 정상적으로 로그인되었습니다.id: {}, token : {}",user.getId(), signInResultDto.getToken());
         }
         return signInResultDto;

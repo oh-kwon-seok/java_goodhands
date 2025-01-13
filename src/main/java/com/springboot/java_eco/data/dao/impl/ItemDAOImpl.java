@@ -11,7 +11,9 @@ import com.springboot.java_eco.data.repository.type.TypeRepository;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -42,14 +44,28 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
     @Override
-    public Item insertItem(ItemDto itemDto) throws Exception {
+    public Item insertItem(ItemDto itemDto, MultipartFile file_url) throws Exception {
 
         Company company = companyRepository.findByUid(itemDto.getCompany_uid());
         Type type = typeRepository.findByUid(itemDto.getType_uid());
 
         Optional<Item> selectedItem = Optional.ofNullable(itemRepository.findByCodeAndUsed(itemDto.getCode(),1L));
 
+        // 파일 처리
+        String filePath = "";
+        if (file_url != null && !file_url.isEmpty()) {
+            String uploadDir = System.getProperty("user.home") + "/Desktop/uploads";// 파일 저장 경로(맥북)
+            //String uploadDir = "/var/www/uploads"; // 파일 저장 경로(리눅스)
 
+            File dir = new File(uploadDir);
+            if (!dir.exists()) dir.mkdirs();
+
+            filePath = uploadDir + File.separator + file_url.getOriginalFilename();
+            file_url.transferTo(new File(filePath));
+            LOGGER.info("파일 업로드 성공: {}", filePath);
+
+            // 파일 경로를 DTO에 저장 (필요 시)
+        }
 
         if (selectedItem.isPresent()) {
             Item item = selectedItem.get();
@@ -71,6 +87,7 @@ public class ItemDAOImpl implements ItemDAO {
             item.setType(type);
 
             item.setImage_url(String.valueOf(itemDto.getImage_url()));
+            item.setFile_path(filePath);
 
             item.setUsed(1);
             item.setCompany(company);
@@ -97,7 +114,7 @@ public class ItemDAOImpl implements ItemDAO {
             item.setType(type);
 
             item.setImage_url(String.valueOf(itemDto.getImage_url()));
-
+            item.setFile_path(filePath);
             item.setUsed(1);
             item.setCompany(company);
             item.setCreated(LocalDateTime.now());
@@ -125,7 +142,7 @@ public class ItemDAOImpl implements ItemDAO {
     }
 
     @Override
-    public Item updateItem(ItemDto itemDto) throws Exception {
+    public Item updateItem(ItemDto itemDto,MultipartFile file_url) throws Exception {
 
         Company company = companyRepository.findByUid(itemDto.getCompany_uid());
         Type type = typeRepository.findByUid(itemDto.getType_uid());
@@ -133,10 +150,13 @@ public class ItemDAOImpl implements ItemDAO {
 
         Optional<Item> selectedItem = itemRepository.findById(itemDto.getUid());
 
+
         Item updatedItem;
 
         if (selectedItem.isPresent()) {
             Item item = selectedItem.get();
+
+
             item.setCode(itemDto.getCode());
             item.setSimple_code(itemDto.getSimple_code());
             item.setIngr_kor_name(itemDto.getIngr_kor_name());
@@ -158,6 +178,36 @@ public class ItemDAOImpl implements ItemDAO {
 
             item.setUsed(Math.toIntExact(itemDto.getUsed()));
             item.setUpdated(LocalDateTime.now());
+
+
+            // 기존 파일 삭제 로직
+            if (file_url != null && item.getFile_path() != null) {
+                File oldFile = new File(item.getFile_path());
+                if (oldFile.exists() && oldFile.isFile()) {
+                    oldFile.delete();
+                }
+            }
+
+            // 새로운 파일 저장
+            if (file_url != null) {
+
+                String uploadDir = System.getProperty("user.home") + "/Desktop/uploads";// 파일 저장 경로(맥북)
+                //String uploadDir = "/var/www/uploads"; // 파일 저장 경로(리눅스)
+                File dir = new File(uploadDir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+
+                // 새로운 파일 경로 설정 및 저장
+                String newFilePath = uploadDir + File.separator + file_url.getOriginalFilename();
+                file_url.transferTo(new File(newFilePath));
+                item.setFile_path(newFilePath); // 새로운 파일 경로를 DTO에 설정
+            } else {
+                // 새로운 파일이 없을 경우 기존 파일 경로 유지
+                item.setFile_path(item.getFile_path());
+            }
+
+
             updatedItem = itemRepository.save(item);
         } else {
             throw new Exception();
@@ -174,6 +224,13 @@ public class ItemDAOImpl implements ItemDAO {
                 Item item = selectedItem.get();
                 item.setUsed(0);
                 item.setDeleted(LocalDateTime.now());
+
+                // 기존 파일 삭제 로직
+                    File oldFile = new File(item.getFile_path());
+                    if (oldFile.exists() && oldFile.isFile()) {
+                        oldFile.delete();
+                    }
+                    item.setFile_path(null);
                 itemRepository.save(item);
             } else {
                 throw new Exception("Item with UID " + uid + " not found.");

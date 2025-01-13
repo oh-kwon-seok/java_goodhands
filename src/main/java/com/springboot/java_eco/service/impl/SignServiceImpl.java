@@ -2,12 +2,15 @@ package com.springboot.java_eco.service.impl;
 
 
 import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.java_eco.common.CommonResponse;
 import com.springboot.java_eco.config.security.JwtTokenProvider;
 import com.springboot.java_eco.data.dao.UserDAO;
 import com.springboot.java_eco.data.dto.SignInResultDto;
 import com.springboot.java_eco.data.dto.SignUpResultDto;
 import com.springboot.java_eco.data.dto.common.CommonInfoSearchDto;
+import com.springboot.java_eco.data.dto.user.Permission;
 import com.springboot.java_eco.data.dto.user.UserDto;
 import com.springboot.java_eco.data.entity.*;
 import com.springboot.java_eco.data.repository.company.CompanyRepository;
@@ -74,7 +77,7 @@ public class SignServiceImpl implements SignService {
     }
 
     @Override
-    public  SignUpResultDto save(UserDto userDto) throws RuntimeException{
+    public SignUpResultDto save(UserDto userDto) throws RuntimeException {
 
         Company company = companyRepository.findByUid(userDto.getCompany_uid());
         Employment employment = employmentRepository.findByUid(userDto.getEmployment_uid());
@@ -82,23 +85,30 @@ public class SignServiceImpl implements SignService {
         String id = userDto.getId();
         String name = userDto.getName();
         String password = userDto.getPassword();
-
         String email = userDto.getEmail();
         String phone = userDto.getPhone();
         String auth = userDto.getAuth();
         Optional<User> selectedUser = userRepository.findById(userDto.getId());
+        Map<String, Permission> menu = userDto.getMenu(); // Permission 데이터 구조
 
-        LOGGER.info("[selectUser] : {}",selectedUser);
+        LOGGER.info("[selectUser] : {}", selectedUser);
 
         User user;
         SignUpResultDto signUpResultDto = new SignUpResultDto();
 
-        if(selectedUser.isPresent()){
-
+        if (selectedUser.isPresent()) {
             setFailResult(signUpResultDto);
             return signUpResultDto;
+        } else {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String menuJson = ""; // menu 데이터를 JSON 문자열로 변환
+            try {
+                menuJson = objectMapper.writeValueAsString(menu);
+            } catch (JsonProcessingException e) {
+                LOGGER.error("Error serializing menu data: {}", e.getMessage());
+                throw new RuntimeException("Failed to serialize menu data", e);
+            }
 
-        }else{
             if (auth.equalsIgnoreCase("admin")) {
                 user = User.builder()
                         .id(id)
@@ -110,6 +120,7 @@ public class SignServiceImpl implements SignService {
                         .email(email)
                         .phone(phone)
                         .auth(Collections.singletonList("ROLE_ADMIN"))
+                        .menu(menuJson) // menu 데이터 설정
                         .created(LocalDateTime.now())
                         .used(1)
                         .build();
@@ -118,35 +129,31 @@ public class SignServiceImpl implements SignService {
                 setSuccessResult(signUpResultDto);
                 return signUpResultDto;
 
-            } else if(auth.equalsIgnoreCase("user")){
+            } else if (auth.equalsIgnoreCase("user")) {
                 user = User.builder()
                         .id(id)
-
                         .name(name)
                         .company(company)
                         .employment(employment)
                         .department(department)
-
                         .password(passwordEncoder.encode(password))
                         .email(email)
                         .phone(phone)
-
-
                         .auth(Collections.singletonList("ROLE_USER"))
+                        .menu(menuJson) // menu 데이터 설정
                         .created(LocalDateTime.now())
                         .used(1)
                         .build();
                 userRepository.save(user);
+
                 setSuccessResult(signUpResultDto);
                 return signUpResultDto;
-            }else{
+            } else {
                 throw new RuntimeException();
             }
-
         }
-
-
     }
+
 
     @Override
     public  SignUpResultDto update(UserDto userDto) throws RuntimeException{
@@ -166,10 +173,21 @@ public class SignServiceImpl implements SignService {
 
         Optional<User> selectedUser = Optional.ofNullable(userRepository.getById(userDto.getId()));
 
+        Map<String, Permission> menu = userDto.getMenu(); // Permission 데이터 구조
+
         User user;
         SignUpResultDto signUpResultDto = new SignUpResultDto();
 
         if(selectedUser.isPresent()){
+            ObjectMapper objectMapper = new ObjectMapper();
+            String menuJson = ""; // menu 데이터를 JSON 문자열로 변환
+            try {
+                menuJson = objectMapper.writeValueAsString(menu);
+            } catch (JsonProcessingException e) {
+                LOGGER.error("Error serializing menu data: {}", e.getMessage());
+                throw new RuntimeException("Failed to serialize menu data", e);
+            }
+
             if (auth.equalsIgnoreCase("admin")) {
                 user = User.builder()
                         .id(id)
@@ -181,6 +199,7 @@ public class SignServiceImpl implements SignService {
                         .email(email)
                         .phone(phone)
                         .auth(Collections.singletonList("ROLE_ADMIN"))
+                        .menu(menuJson)
                         .updated(LocalDateTime.now())
                         .used(Math.toIntExact(userDto.getUsed()))
                         .build();
@@ -201,6 +220,7 @@ public class SignServiceImpl implements SignService {
                         .email(email)
                         .phone(phone)
                         .auth(Collections.singletonList("ROLE_USER"))
+                        .menu(menuJson)
                         .updated(LocalDateTime.now())
                         .used(Math.toIntExact(userDto.getUsed()))
                         .build();
@@ -247,11 +267,7 @@ public class SignServiceImpl implements SignService {
         }else if(user != null && (passwordEncoder.matches(password, user.getPassword()))){
             LOGGER.info("[getSignInResult] 패스워드 일치");
             LOGGER.info("[getSignInResult] SignInResultDto 객체 생성");
-
-
-
             History history = new History();
-
             history.setName("로그인");
             history.setIp(clientIp);
             history.setUser(user);
@@ -260,10 +276,26 @@ public class SignServiceImpl implements SignService {
 
             History insertHistory = historyRepository.save(history);
 
+            // menu를 JSON 문자열로 변환
+            ObjectMapper objectMapper = new ObjectMapper();
+            String menuAsString;
+            try {
+                menuAsString = objectMapper.writeValueAsString(user.getMenu());
+            } catch (Exception e) {
+                throw new RuntimeException("Invalid menu format", e);
+            }
+
+
+            user.setMenu(menuAsString);
+
 
             SignInResultDto signInResultDto = SignInResultDto.builder()
                     .token(jwtTokenProvider.createToken(String.valueOf(user.getId()),user.getAuth()))
                     .company_uid(user.getCompany().getUid())
+                    .menu(user.getMenu())
+                    .name(user.getName())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
                     .build();
 
             LOGGER.info("[getSignInResult] SignInResultDto 객체에 값 주입 lgoger: {}",signInResultDto);

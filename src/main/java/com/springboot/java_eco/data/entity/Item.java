@@ -51,6 +51,9 @@ public class Item extends BaseEntity{
 
     @Column
     private String image_url;
+    @Column
+    private String file_path;
+
 
     @ManyToOne
     @JoinColumn(name="type_uid")
