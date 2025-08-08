@@ -24,8 +24,6 @@ public class QUser extends EntityPathBase<User> {
 
     public final ListPath<String, StringPath> auth = this.<String, StringPath>createList("auth", String.class, StringPath.class, PathInits.DIRECT2);
 
-    public final QCompany company;
-
     public final DateTimePath<java.time.LocalDateTime> created = createDateTime("created", java.time.LocalDateTime.class);
 
     public final DateTimePath<java.time.LocalDateTime> deleted = createDateTime("deleted", java.time.LocalDateTime.class);
@@ -48,7 +46,7 @@ public class QUser extends EntityPathBase<User> {
 
     public final DateTimePath<java.time.LocalDateTime> updated = createDateTime("updated", java.time.LocalDateTime.class);
 
-    public final NumberPath<Integer> used = createNumber("used", Integer.class);
+    public final BooleanPath used = createBoolean("used");
 
     public QUser(String variable) {
         this(User.class, forVariable(variable), INITS);
@@ -68,7 +66,6 @@ public class QUser extends EntityPathBase<User> {
 
     public QUser(Class<? extends User> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.company = inits.isInitialized("company") ? new QCompany(forProperty("company")) : null;
         this.department = inits.isInitialized("department") ? new QDepartment(forProperty("department"), inits.get("department")) : null;
         this.employment = inits.isInitialized("employment") ? new QEmployment(forProperty("employment"), inits.get("employment")) : null;
     }

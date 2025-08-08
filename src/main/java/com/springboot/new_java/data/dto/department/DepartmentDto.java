@@ -10,15 +10,15 @@ import lombok.*;
 
 public class DepartmentDto {
     private Long uid;
-    private Long company_uid;
+    private String user_id;
 
     private String name;
 
-    private Long used;
+    private Boolean used;
     private String token;
 
-    public DepartmentDto(Long uid,Long company_uid, String name, Long used, String token){
-        this.company_uid = company_uid;
+    public DepartmentDto(Long uid,String user_id, String name, Boolean used, String token){
+        this.user_id = user_id;
         this.uid = uid;
         this.name = name;
         this.used = used;

@@ -24,8 +24,6 @@ public class QDepartment extends EntityPathBase<Department> {
 
     public final QBaseEntity _super = new QBaseEntity(this);
 
-    public final QCompany company;
-
     //inherited
     public final DateTimePath<java.time.LocalDateTime> created = _super.created;
 
@@ -39,7 +37,9 @@ public class QDepartment extends EntityPathBase<Department> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updated = _super.updated;
 
-    public final NumberPath<Integer> used = createNumber("used", Integer.class);
+    public final BooleanPath used = createBoolean("used");
+
+    public final QUser user;
 
     public QDepartment(String variable) {
         this(Department.class, forVariable(variable), INITS);
@@ -59,7 +59,7 @@ public class QDepartment extends EntityPathBase<Department> {
 
     public QDepartment(Class<? extends Department> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.company = inits.isInitialized("company") ? new QCompany(forProperty("company")) : null;
+        this.user = inits.isInitialized("user") ? new QUser(forProperty("user"), inits.get("user")) : null;
     }
 
 }

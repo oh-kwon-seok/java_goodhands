@@ -57,7 +57,7 @@ public class EmploymentController {
     public ResponseEntity<Employment> createEmployment(@RequestBody EmploymentDto employmentDto) throws Exception{
         long currentTime = System.currentTimeMillis();
         LOGGER.info("[employmentDto]  : {}", employmentDto);
-        Employment insertEmployment = employmentService.saveEmployment(employmentDto);
+        Employment insertEmployment = employmentService.insertEmployment(employmentDto);
         LOGGER.info("[createEmployment] response Time : {}ms", System.currentTimeMillis() - currentTime);
         return ResponseEntity.status(HttpStatus.OK).body(insertEmployment);
     }

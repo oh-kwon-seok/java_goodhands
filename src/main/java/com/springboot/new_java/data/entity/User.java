@@ -28,9 +28,7 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "company_uid")
-    private Company company;
+
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "employment_uid")
@@ -58,7 +56,7 @@ public class User implements UserDetails {
     @LastModifiedDate
     private LocalDateTime deleted;
 
-    private Integer used;
+    private Boolean used;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default

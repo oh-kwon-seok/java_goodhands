@@ -10,21 +10,19 @@ import lombok.*;
 
 public class EmploymentDto {
     private Long uid;
-    private Long company_uid;
+    private String user_id;
 
     private String name;
     private String name2;
 
-    private Long used;
+    private Boolean used;
     private String token;
 
-    public EmploymentDto(Long uid, Long company_uid,String name, String name2, Long used, String token){
+    public EmploymentDto(Long uid, String user_id,String name, String name2, Boolean used, String token){
         this.uid = uid;
-        this.company_uid = company_uid;
+        this.user_id = user_id;
         this.name = name;
         this.name2 = name2;
-
-
         this.used = used;
         this.token = token;
 

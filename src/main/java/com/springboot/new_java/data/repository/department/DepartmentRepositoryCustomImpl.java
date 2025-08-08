@@ -33,19 +33,15 @@ public class DepartmentRepositoryCustomImpl extends QuerydslRepositorySupport im
             if (department.name != null) {
                 builder.or(department.name.like("%" + search_text + "%"));
             }
-            if (department.company.name != null) {
-                builder.or(department.company.name.like("%" + search_text + "%"));
-            }
+
         }else {
             if("name".equals(filter_title)){
                 builder.and(department.name.like("%" + search_text + "%"));
-            }else if("company".equals(filter_title)){
-                builder.and(department.company.name.like("%" + search_text + "%"));
             }
         }
 
         // used 필드가 1인 항목만 검색 조건 추가
-        Predicate used = department.used.eq(1);
+        Predicate used = department.used.eq(true);
         Predicate predicate = builder.getValue();
         List<Department> departmentList = from(department)
                 .select(department)
@@ -59,7 +55,7 @@ public class DepartmentRepositoryCustomImpl extends QuerydslRepositorySupport im
 
         QDepartment department = QDepartment.department;
 
-        Predicate used = department.used.eq(1);
+        Predicate used = department.used.eq(true);
 
         List<Department> departmentList = from(department)
                 .select(department)

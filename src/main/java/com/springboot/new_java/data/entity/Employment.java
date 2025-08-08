@@ -19,17 +19,19 @@ public class Employment extends BaseEntity{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long uid;
 
-    @ManyToOne(fetch = FetchType.EAGER)  // ToOne은 fetch = FetchType.LAZY로 꼭 !!! 세팅
-    @JoinColumn(name="company_uid")
-    private Company company;
 
     @Column(nullable = false)
     private String name;
 
     private String name2;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+
     @Column(nullable = false)
-    private Integer used;
+    private Boolean used;
 
 
 }

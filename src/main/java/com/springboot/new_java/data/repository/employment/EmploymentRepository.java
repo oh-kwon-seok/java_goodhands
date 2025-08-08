@@ -1,6 +1,5 @@
 package com.springboot.new_java.data.repository.employment;
 
-import com.springboot.new_java.data.entity.Company;
 import com.springboot.new_java.data.entity.Employment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,6 +10,6 @@ public interface EmploymentRepository extends JpaRepository<Employment,Long>, Em
     Employment findByUid(Long uid);
 
 
-    Employment findByNameAndCompanyAndUsed(String name, Company company, Long used);
+    Employment findByNameAndUsed(String name, Boolean used);
 
 }

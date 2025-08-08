@@ -2,7 +2,7 @@ package com.springboot.new_java.data.repository.history;
 
 
 import ch.qos.logback.classic.Logger;
-import com.springboot.new_java.controller.ItemController;
+import com.springboot.new_java.controller.SignController;
 import com.springboot.new_java.data.entity.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
@@ -15,7 +15,7 @@ public class HistoryRepositoryCustomImpl extends QuerydslRepositorySupport imple
         super(User.class);
     }
 
-    private final Logger LOGGER = (Logger) LoggerFactory.getLogger(ItemController.class);
+    private final Logger LOGGER = (Logger) LoggerFactory.getLogger(SignController.class);
 
 
 

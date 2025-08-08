@@ -4,7 +4,7 @@ package com.springboot.new_java.data.repository.user;
 import ch.qos.logback.classic.Logger;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
-import com.springboot.new_java.controller.ItemController;
+import com.springboot.new_java.controller.SignController;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.entity.User;
 import com.springboot.new_java.data.entity.QUser;
@@ -21,7 +21,7 @@ public class UserRepositoryCustomImpl extends QuerydslRepositorySupport implemen
         super(User.class);
     }
 
-    private final Logger LOGGER = (Logger) LoggerFactory.getLogger(ItemController.class);
+    private final Logger LOGGER = (Logger) LoggerFactory.getLogger(SignController.class);
 
     @Override
     public List<User> findAll(CommonInfoSearchDto commonInfoSearchDto){
@@ -42,9 +42,7 @@ public class UserRepositoryCustomImpl extends QuerydslRepositorySupport implemen
                 builder.or(user.id.like("%" + search_text + "%"));
             }
 
-            if (user.company.name != null) {
-                builder.or(user.company.name.like("%" + search_text + "%"));
-            }
+
             if (user.employment.name != null) {
                 builder.or(user.employment.name.like("%" + search_text + "%"));
             }
@@ -66,9 +64,7 @@ public class UserRepositoryCustomImpl extends QuerydslRepositorySupport implemen
             if("id".equals(filter_title)){
                 builder.and(user.id.like("%" + search_text + "%"));
             }
-            else if("company".equals(filter_title)){
-                builder.and(user.company.name.like("%" + search_text + "%"));
-            }
+
             else if("employment".equals(filter_title)){
                 builder.and(user.employment.name.like("%" + search_text + "%"));
             }
@@ -89,7 +85,7 @@ public class UserRepositoryCustomImpl extends QuerydslRepositorySupport implemen
 
         }
         // used 필드가 1인 항목만 검색 조건 추가
-        Predicate used = user.used.eq(1);
+        Predicate used = user.used.eq(true);
 
 //        Predicate auth = user.auth.contains("ROLE_ADMIN");
 
@@ -100,7 +96,7 @@ public class UserRepositoryCustomImpl extends QuerydslRepositorySupport implemen
 
                 .select(user)
                 .where(predicate,used)
-                .orderBy(user.company.name.desc()) // Order by created field in descending order
+                .orderBy(user.name.desc()) // Order by created field in descending order
                 .fetch();
 
         return userList;
@@ -111,7 +107,7 @@ public class UserRepositoryCustomImpl extends QuerydslRepositorySupport implemen
 
         QUser user = QUser.user;
 
-        Predicate used = user.used.eq(1);
+        Predicate used = user.used.eq(true);
 
         List<User> userList = from(user)
                 .select(user)

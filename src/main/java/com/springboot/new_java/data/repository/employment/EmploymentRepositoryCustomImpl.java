@@ -37,8 +37,6 @@ public class EmploymentRepositoryCustomImpl extends QuerydslRepositorySupport im
             }
             if (employment.name2 != null) {
                 builder.or(employment.name2.like("%" + search_text + "%"));
-            } if (employment.company.name != null) {
-                builder.or(employment.company.name.like("%" + search_text + "%"));
             }
 
         }else {
@@ -47,12 +45,10 @@ public class EmploymentRepositoryCustomImpl extends QuerydslRepositorySupport im
             }
             else if("name2".equals(filter_title)){
                 builder.and(employment.name2.like("%" + search_text + "%"));
-            } else if("company".equals(filter_title)){
-                builder.and(employment.company.name.like("%" + search_text + "%"));
             }
         }
         // used 필드가 1인 항목만 검색 조건 추가
-        Predicate used = employment.used.eq(1);
+        Predicate used = employment.used.eq(true);
         Predicate predicate = builder.getValue();
 
 
@@ -68,7 +64,7 @@ public class EmploymentRepositoryCustomImpl extends QuerydslRepositorySupport im
 
         QEmployment employment = QEmployment.employment;
 
-        Predicate used = employment.used.eq(1);
+        Predicate used = employment.used.eq(true);
 
         List<Employment> employmentList = from(employment)
                 .select(employment)
