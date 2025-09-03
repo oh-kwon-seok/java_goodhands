@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface CareHomeTypeRepositoryCustom {
     List<CareHomeType> findAll(CommonInfoSearchDto commonInfoSearchDto);
-    List<CareHomeType> findInfo(CommonInfoSearchDto commonInfoSearchDto);
+    List<CareHomeType> findInfo();
 
 }

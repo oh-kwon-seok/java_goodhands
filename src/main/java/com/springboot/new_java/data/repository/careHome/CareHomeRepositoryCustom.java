@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface CareHomeRepositoryCustom {
     List<CareHome> findAll(CommonInfoSearchDto commonInfoSearchDto);
-    List<CareHome> findInfo(CommonInfoSearchDto commonInfoSearchDto);
+    List<CareHome> findInfo();
 
 }

@@ -1,17 +1,19 @@
 package com.springboot.new_java.controller;
 
 import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.new_java.common.CommonApiResponse;
-import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.dto.care.CareHomeDto;
 import com.springboot.new_java.data.entity.care.CareHome;
 import com.springboot.new_java.service.CareHomeService;
 
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 import java.util.Map;
@@ -19,28 +21,24 @@ import java.util.Map;
 @RestController
 @RequestMapping("/careHome")
 
-public class CareHomeController {
-    private final CareHomeService careHomeService;
+public class CareHomeController extends AbstractSearchController<CareHome, CareHomeDto>{
     private final Logger LOGGER = (Logger) LoggerFactory.getLogger(CareHomeController.class);
 
-    @Autowired
-    public CareHomeController(CareHomeService careHomeService) {
+    private final CareHomeService careHomeService;
+
+
+    public CareHomeController(CareHomeService careHomeService, RedisTemplate<String, Object> redisTemplate, ObjectMapper objectMapper) {
+        super(careHomeService,redisTemplate,objectMapper);
         this.careHomeService = careHomeService;
+
+
     }
-    @GetMapping("/select")
-    public ResponseEntity<CommonApiResponse<List<CareHome>>> getTotalCareHome(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) {
-        long start = System.currentTimeMillis();
-        List<CareHome> careHomes = careHomeService.getTotalCareHome(commonInfoSearchDto);
-        LOGGER.info("[getTotalCareHome] response time: {}ms", System.currentTimeMillis() - start);
-        return ResponseEntity.ok(CommonApiResponse.success(careHomes));
+
+    @Override
+    protected String getEntityPath() {
+        return "careHomes";
     }
-    @GetMapping("/info_select")
-    public ResponseEntity<CommonApiResponse<List<CareHome>>> getCareHome(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) {
-        long start = System.currentTimeMillis();
-        List<CareHome> careHomes = careHomeService.getCareHome(commonInfoSearchDto);
-        LOGGER.info("[getCareHome] response time: {}ms", System.currentTimeMillis() - start);
-        return ResponseEntity.ok(CommonApiResponse.success(careHomes));
-    }
+
 
     @PostMapping(value = "/save", consumes = "application/json", produces = "application/json")
     public ResponseEntity<CommonApiResponse<CareHome>> createCareHome(@RequestBody CareHomeDto careHomeDto) {

@@ -41,6 +41,8 @@ public class QCareHome extends EntityPathBase<CareHome> {
 
     public final BooleanPath used = createBoolean("used");
 
+    public final com.springboot.new_java.data.entity.QUser user;
+
     public QCareHome(String variable) {
         this(CareHome.class, forVariable(variable), INITS);
     }
@@ -59,7 +61,8 @@ public class QCareHome extends EntityPathBase<CareHome> {
 
     public QCareHome(Class<? extends CareHome> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.careHomeType = inits.isInitialized("careHomeType") ? new QCareHomeType(forProperty("careHomeType")) : null;
+        this.careHomeType = inits.isInitialized("careHomeType") ? new QCareHomeType(forProperty("careHomeType"), inits.get("careHomeType")) : null;
+        this.user = inits.isInitialized("user") ? new com.springboot.new_java.data.entity.QUser(forProperty("user"), inits.get("user")) : null;
     }
 
 }

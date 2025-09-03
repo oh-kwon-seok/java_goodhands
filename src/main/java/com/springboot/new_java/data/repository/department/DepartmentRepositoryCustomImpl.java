@@ -5,6 +5,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.entity.Department;
+
 import com.springboot.new_java.data.entity.QDepartment;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Component;
@@ -46,12 +47,15 @@ public class DepartmentRepositoryCustomImpl extends QuerydslRepositorySupport im
         List<Department> departmentList = from(department)
                 .select(department)
                 .where(predicate,used)
+                .orderBy(department.created.desc())
                 .fetch();
 
         return departmentList;
     }
+
+
     @Override
-    public List<Department> findInfo(CommonInfoSearchDto DepartmentSearchDto){
+    public List<Department> findInfo(){
 
         QDepartment department = QDepartment.department;
 
@@ -60,6 +64,7 @@ public class DepartmentRepositoryCustomImpl extends QuerydslRepositorySupport im
         List<Department> departmentList = from(department)
                 .select(department)
                 .where(used)
+                .orderBy(department.created.desc())
                 .fetch();
 
         return departmentList;

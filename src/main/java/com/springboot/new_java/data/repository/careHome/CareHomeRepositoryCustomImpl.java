@@ -5,6 +5,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.entity.care.CareHome;
+
 import com.springboot.new_java.data.entity.care.QCareHome;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Component;
@@ -24,11 +25,7 @@ public class CareHomeRepositoryCustomImpl extends QuerydslRepositorySupport impl
 
         String filter_title = commonInfoSearchDto.getFilter_title();
         String search_text = commonInfoSearchDto.getSearch_text();
-
-
-
         BooleanBuilder builder = new BooleanBuilder();
-
 
         if("all".equals(filter_title)){
 
@@ -60,7 +57,7 @@ public class CareHomeRepositoryCustomImpl extends QuerydslRepositorySupport impl
         return careHomeList;
     }
     @Override
-    public List<CareHome> findInfo(CommonInfoSearchDto commonInfoSearchDto){
+    public List<CareHome> findInfo(){
 
         QCareHome careHome = QCareHome.careHome;
 

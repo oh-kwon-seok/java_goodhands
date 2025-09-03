@@ -1,7 +1,12 @@
 package com.springboot.new_java.service;
 
+import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.dto.care.CareHomeDto;
+
+import com.springboot.new_java.data.dto.department.DepartmentDto;
+import com.springboot.new_java.data.entity.Department;
 import com.springboot.new_java.data.entity.User;
 import com.springboot.new_java.data.entity.care.CareHome;
 import com.springboot.new_java.data.entity.care.CareHomeType;
@@ -9,24 +14,50 @@ import com.springboot.new_java.data.repository.careHome.CareHomeRepository;
 import com.springboot.new_java.data.repository.careHomeType.CareHomeTypeRepository;
 import com.springboot.new_java.data.repository.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class CareHomeService {
+public class CareHomeService extends AbstractCacheableSearchService<CareHome, CareHomeDto>{
+    private final Logger LOGGER = (Logger) LoggerFactory.getLogger(CareHomeService.class);
 
     private final CareHomeRepository careHomeRepository;
     private final UserRepository userRepository;
     private final CareHomeTypeRepository careHomeTypeRepository;
 
-    @Autowired
-    public CareHomeService(CareHomeRepository careHomeRepository, UserRepository userRepository, CareHomeTypeRepository careHomeTypeRepository) {
+
+
+
+    public CareHomeService(CareHomeRepository careHomeRepository, UserRepository userRepository, CareHomeTypeRepository careHomeTypeRepository,CareHomeTypeService careHomeTypeService, RedisTemplate<String,Object> redisTemplate,ObjectMapper objectMapper) {
+
+        super(redisTemplate,objectMapper);
         this.careHomeRepository = careHomeRepository;
         this.userRepository = userRepository;
         this.careHomeTypeRepository = careHomeTypeRepository;
+
+    }
+
+    @Override
+    public String getEntityType() {
+        return "CareHome";
+    }
+
+    @Override
+    public List<CareHome> findAllBySearchCondition(CommonInfoSearchDto searchDto) {
+        return careHomeRepository.findAll(searchDto);
+    }
+    @Override
+    public Duration getCacheTtl(CommonInfoSearchDto searchDto) {
+        return searchDto.hasSearchCondition()
+                ? Duration.ofMinutes(2)  // Department 검색은 2분
+                : Duration.ofMinutes(10); // Department 전체는 10분
     }
 
     public CareHome insertCareHome(CareHomeDto careHomeDto) {
@@ -43,13 +74,6 @@ public class CareHomeService {
         return careHomeRepository.save(careHome);
     }
 
-    public List<CareHome> getTotalCareHome(CommonInfoSearchDto commonInfoSearchDto) {
-        return careHomeRepository.findAll(commonInfoSearchDto);
-    }
-
-    public List<CareHome> getCareHome(CommonInfoSearchDto commonInfoSearchDto) {
-        return careHomeRepository.findInfo(commonInfoSearchDto);
-    }
 
     public CareHome updateCareHome(CareHomeDto careHomeDto) {
         CareHome careHome = careHomeRepository.findById(careHomeDto.getUid())
@@ -76,5 +100,15 @@ public class CareHomeService {
             careHomeRepository.save(careHome);
         }
         return "CareHomes deleted successfully";
+    }
+
+
+    @Override
+    public CareHomeDto convertToDto(CareHome careHome) {
+        CareHomeDto dto = new CareHomeDto();
+        dto.setUid(careHome.getUid());
+        dto.setName(careHome.getName());
+
+        return dto;
     }
 }

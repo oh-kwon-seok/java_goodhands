@@ -2,56 +2,44 @@ package com.springboot.new_java.controller;
 
 
 import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.springboot.new_java.common.CommonApiResponse;
+import com.springboot.new_java.data.dto.care.CareHomeTypeDto;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.dto.employment.EmploymentDto;
 import com.springboot.new_java.data.entity.Employment;
+import com.springboot.new_java.data.entity.care.CareHomeType;
 import com.springboot.new_java.service.EmploymentService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/employment")
 @Controller
-public class EmploymentController {
-    private final EmploymentService employmentService;
+public class EmploymentController extends AbstractSearchController<Employment, EmploymentDto> {
     private final Logger LOGGER = (Logger) LoggerFactory.getLogger(EmploymentController.class);
 
-    @Autowired
-    public EmploymentController(EmploymentService employmentService){
+    private final EmploymentService employmentService;
+
+    public EmploymentController(EmploymentService employmentService, RedisTemplate<String,Object> redisTemplate, ObjectMapper objectMapper){
+        super(employmentService,redisTemplate,objectMapper);
         this.employmentService = employmentService;
     }
 
-    @GetMapping(value= "/select")
-    public ResponseEntity<List<Employment>> getTotalEmployment(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) throws RuntimeException{
-
-        long currentTime = System.currentTimeMillis();
-
-        List<Employment> selectedTotalEmployment = employmentService.getTotalEmployment(commonInfoSearchDto);
-
-        LOGGER.info("[getTotalEmployment] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
-
-        return ResponseEntity.status(HttpStatus.OK).body(selectedTotalEmployment);
-
+    @Override
+    protected String getEntityPath() {
+        return "employments";
     }
-    @GetMapping(value= "/info_select")
-    public ResponseEntity<List<Employment>> getEmployment(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) throws RuntimeException{
 
-        long currentTime = System.currentTimeMillis();
-
-        List<Employment> selectedTotalEmployment = employmentService.getEmployment(commonInfoSearchDto);
-
-        LOGGER.info("[getTotalEmployment] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
-
-        return ResponseEntity.status(HttpStatus.OK).body(selectedTotalEmployment);
-
-    }
 
     @PostMapping(value= "/save", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Employment> createEmployment(@RequestBody EmploymentDto employmentDto) throws Exception{

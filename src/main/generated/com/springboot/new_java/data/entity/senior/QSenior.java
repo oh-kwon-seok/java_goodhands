@@ -38,8 +38,6 @@ public class QSenior extends EntityPathBase<Senior> {
     //inherited
     public final DateTimePath<java.time.LocalDateTime> deleted = _super.deleted;
 
-    public final BooleanPath is_care_schedule = createBoolean("is_care_schedule");
-
     public final StringPath name = createString("name");
 
     public final ListPath<SeniorDisease, QSeniorDisease> seniorDiseases = this.<SeniorDisease, QSeniorDisease>createList("seniorDiseases", SeniorDisease.class, QSeniorDisease.class, PathInits.DIRECT2);
@@ -48,6 +46,8 @@ public class QSenior extends EntityPathBase<Senior> {
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> updated = _super.updated;
+
+    public final BooleanPath use_care_schedule = createBoolean("use_care_schedule");
 
     public final BooleanPath used = createBoolean("used");
 

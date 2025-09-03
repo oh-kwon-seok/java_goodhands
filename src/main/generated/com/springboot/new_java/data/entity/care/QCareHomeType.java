@@ -7,6 +7,7 @@ import com.querydsl.core.types.dsl.*;
 import com.querydsl.core.types.PathMetadata;
 import javax.annotation.processing.Generated;
 import com.querydsl.core.types.Path;
+import com.querydsl.core.types.dsl.PathInits;
 
 
 /**
@@ -16,6 +17,8 @@ import com.querydsl.core.types.Path;
 public class QCareHomeType extends EntityPathBase<CareHomeType> {
 
     private static final long serialVersionUID = 476245653L;
+
+    private static final PathInits INITS = PathInits.DIRECT2;
 
     public static final QCareHomeType careHomeType = new QCareHomeType("careHomeType");
 
@@ -36,16 +39,27 @@ public class QCareHomeType extends EntityPathBase<CareHomeType> {
 
     public final BooleanPath used = createBoolean("used");
 
+    public final com.springboot.new_java.data.entity.QUser user;
+
     public QCareHomeType(String variable) {
-        super(CareHomeType.class, forVariable(variable));
+        this(CareHomeType.class, forVariable(variable), INITS);
     }
 
     public QCareHomeType(Path<? extends CareHomeType> path) {
-        super(path.getType(), path.getMetadata());
+        this(path.getType(), path.getMetadata(), PathInits.getFor(path.getMetadata(), INITS));
     }
 
     public QCareHomeType(PathMetadata metadata) {
-        super(CareHomeType.class, metadata);
+        this(metadata, PathInits.getFor(metadata, INITS));
+    }
+
+    public QCareHomeType(PathMetadata metadata, PathInits inits) {
+        this(CareHomeType.class, metadata, inits);
+    }
+
+    public QCareHomeType(Class<? extends CareHomeType> type, PathMetadata metadata, PathInits inits) {
+        super(type, metadata, inits);
+        this.user = inits.isInitialized("user") ? new com.springboot.new_java.data.entity.QUser(forProperty("user"), inits.get("user")) : null;
     }
 
 }

@@ -2,10 +2,12 @@ package com.springboot.new_java.controller;
 
 
 import ch.qos.logback.classic.Logger;
+import com.springboot.new_java.common.CommonApiResponse;
 import com.springboot.new_java.data.dto.SignInResultDto;
 import com.springboot.new_java.data.dto.SignUpResultDto;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.dto.user.UserDto;
+import com.springboot.new_java.data.entity.Department;
 import com.springboot.new_java.data.entity.User;
 
 import com.springboot.new_java.service.SignService;
@@ -46,16 +48,16 @@ public class SignController {
 
 
     @GetMapping(value= "/select")
-    public ResponseEntity<List<User>> getTotalUser(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) throws RuntimeException{
+    public ResponseEntity<CommonApiResponse<List<User>>> getTotalUser(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) throws RuntimeException{
         long currentTime = System.currentTimeMillis();
 
         List<User> selectedTotalUser = signService.getTotalUser(commonInfoSearchDto);
 
         LOGGER.info("[getTotalUser] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
-        return ResponseEntity.status(HttpStatus.OK).body(selectedTotalUser);
+        return ResponseEntity.ok(CommonApiResponse.success(selectedTotalUser));
     }
     @GetMapping(value= "/info_select")
-    public ResponseEntity<List<User>> getUser(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) throws RuntimeException{
+    public ResponseEntity<CommonApiResponse<List<User>>> getUser(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) throws RuntimeException{
 
         long currentTime = System.currentTimeMillis();
 
@@ -63,7 +65,7 @@ public class SignController {
 
         LOGGER.info("[getTotalUser] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
 
-        return ResponseEntity.status(HttpStatus.OK).body(selectedTotalUser);
+        return ResponseEntity.ok(CommonApiResponse.success(selectedTotalUser));
 
     }
 

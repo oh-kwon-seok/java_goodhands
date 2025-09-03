@@ -1,37 +1,53 @@
 package com.springboot.new_java.service;
 
+import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.dto.department.DepartmentDto;
 import com.springboot.new_java.data.entity.Department;
-import com.springboot.new_java.data.entity.User;
 import com.springboot.new_java.data.repository.department.DepartmentRepository;
-import com.springboot.new_java.data.repository.user.UserRepository;
+
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
-public class DepartmentService {
+public class DepartmentService extends AbstractCacheableSearchService<Department, DepartmentDto> {
+    private final Logger LOGGER = (Logger) LoggerFactory.getLogger(DepartmentService.class);
 
     private final DepartmentRepository departmentRepository;
-    private final UserRepository userRepository;
 
-    @Autowired
-    public DepartmentService(DepartmentRepository departmentRepository, UserRepository userRepository) {
+
+    public DepartmentService(DepartmentRepository departmentRepository,
+                             RedisTemplate<String, Object> redisTemplate,
+                             ObjectMapper objectMapper) {
+        super(redisTemplate, objectMapper);
         this.departmentRepository = departmentRepository;
-        this.userRepository = userRepository;
     }
 
+    @Override
+    public String getEntityType() {
+        return "Department";
+    }
+    @Override
+    public List<Department> findAllBySearchCondition(CommonInfoSearchDto searchDto) {
+        return departmentRepository.findAll(searchDto);
+    }
+
+
+
     public Department insertDepartment(DepartmentDto departmentDto) {
-        User user = userRepository.findById(departmentDto.getUser_id())
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자 ID입니다."));
 
         Department department = new Department();
-        department.setUser(user);
+
         department.setName(departmentDto.getName());
         department.setUsed(departmentDto.getUsed());
         department.setCreated(LocalDateTime.now());
@@ -39,13 +55,7 @@ public class DepartmentService {
         return departmentRepository.save(department);
     }
 
-    public List<Department> getTotalDepartment(CommonInfoSearchDto commonInfoSearchDto) {
-        return departmentRepository.findAll(commonInfoSearchDto);
-    }
 
-    public List<Department> getDepartment(CommonInfoSearchDto commonInfoSearchDto) {
-        return departmentRepository.findInfo(commonInfoSearchDto);
-    }
 
     public Department updateDepartment(DepartmentDto departmentDto) {
         Department department = departmentRepository.findById(departmentDto.getUid())
@@ -68,5 +78,15 @@ public class DepartmentService {
             departmentRepository.save(department);
         }
         return "Departments deleted successfully";
+    }
+
+    @Override
+    public DepartmentDto convertToDto(Department department) {
+        DepartmentDto dto = new DepartmentDto();
+        dto.setUid(department.getUid());
+        dto.setName(department.getName());
+        dto.setUsed(department.getUsed());
+        dto.setCreated(department.getCreated());
+        return dto;
     }
 }

@@ -16,9 +16,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
+
 @Table(name="senior_disease")
-public class SeniorDisease extends BaseEntity {
+public class SeniorDisease  {
 
     @EmbeddedId
     private SeniorDiseaseUid id;

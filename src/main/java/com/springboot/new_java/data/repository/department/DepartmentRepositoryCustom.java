@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface DepartmentRepositoryCustom {
     List<Department> findAll(CommonInfoSearchDto departmentSearchDto);
-    List<Department> findInfo(CommonInfoSearchDto departmentSearchDto);
+    List<Department> findInfo();
 
 }

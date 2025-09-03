@@ -1,6 +1,7 @@
 package com.springboot.new_java.data.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,9 +25,6 @@ public class Department extends BaseEntity{
     private String name;
 
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id")
-    private User user;
 
 
     @Column(columnDefinition = "BIT")

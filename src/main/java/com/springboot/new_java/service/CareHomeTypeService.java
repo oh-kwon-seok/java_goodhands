@@ -1,31 +1,58 @@
 package com.springboot.new_java.service;
 
+import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.new_java.data.dto.care.CareHomeTypeDto;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
+
+import com.springboot.new_java.data.dto.department.DepartmentDto;
+import com.springboot.new_java.data.entity.Department;
 import com.springboot.new_java.data.entity.User;
 import com.springboot.new_java.data.entity.care.CareHomeType;
 import com.springboot.new_java.data.repository.careHomeType.CareHomeTypeRepository;
 import com.springboot.new_java.data.repository.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class CareHomeTypeService {
+public class CareHomeTypeService extends AbstractCacheableSearchService<CareHomeType, CareHomeTypeDto>{
 
     
     private final UserRepository userRepository;
     private final CareHomeTypeRepository careHomeTypeRepository;
+    private final Logger LOGGER = (Logger) LoggerFactory.getLogger(CareHomeTypeService.class);
 
-    @Autowired
-    public CareHomeTypeService( UserRepository userRepository, CareHomeTypeRepository careHomeTypeRepository) {
-      
+
+
+    public CareHomeTypeService( UserRepository userRepository,
+                                CareHomeTypeRepository careHomeTypeRepository,
+                                RedisTemplate<String,Object> redisTemplate,
+                                ObjectMapper objectMapper) {
+        super(redisTemplate, objectMapper);
         this.userRepository = userRepository;
         this.careHomeTypeRepository = careHomeTypeRepository;
+
     }
+
+    @Override
+    public String getEntityType() {
+        return "CareHomeType";
+    }
+    @Override
+    public List<CareHomeType> findAllBySearchCondition(CommonInfoSearchDto searchDto) {
+        return careHomeTypeRepository.findAll(searchDto);
+    }
+
+
+
 
     public CareHomeType insertCareHomeType(CareHomeTypeDto careHomeDto) {
         String careHomeTypeName = careHomeDto.getName();
@@ -44,14 +71,6 @@ public class CareHomeTypeService {
         return careHomeTypeRepository.save(careHomeType);
     }
 
-
-    public List<CareHomeType> getTotalCareHomeType(CommonInfoSearchDto commonInfoSearchDto) {
-        return careHomeTypeRepository.findAll(commonInfoSearchDto);
-    }
-
-    public List<CareHomeType> getCareHomeType(CommonInfoSearchDto commonInfoSearchDto) {
-        return careHomeTypeRepository.findInfo(commonInfoSearchDto);
-    }
 
     public CareHomeType updateCareHomeType(CareHomeTypeDto careHomeTypeDto) {
         CareHomeType careHome = careHomeTypeRepository.findById(careHomeTypeDto.getUid())
@@ -85,5 +104,12 @@ public class CareHomeTypeService {
             careHomeTypeRepository.save(careHome);
         }
         return "CareHomeTypes deleted successfully";
+    }
+    public CareHomeTypeDto convertToDto(CareHomeType careHomeType) {
+        CareHomeTypeDto dto = new CareHomeTypeDto();
+        dto.setUid(careHomeType.getUid());
+        dto.setName(careHomeType.getName());
+
+        return dto;
     }
 }

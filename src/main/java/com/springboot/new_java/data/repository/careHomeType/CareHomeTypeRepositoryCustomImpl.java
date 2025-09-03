@@ -5,6 +5,7 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.entity.care.CareHomeType;
+
 import com.springboot.new_java.data.entity.care.QCareHomeType;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Component;
@@ -56,7 +57,7 @@ public class CareHomeTypeRepositoryCustomImpl extends QuerydslRepositorySupport 
         return careHomeTypeList;
     }
     @Override
-    public List<CareHomeType> findInfo(CommonInfoSearchDto commonInfoSearchDto){
+    public List<CareHomeType> findInfo(){
 
         QCareHomeType careHomeType = QCareHomeType.careHomeType;
 

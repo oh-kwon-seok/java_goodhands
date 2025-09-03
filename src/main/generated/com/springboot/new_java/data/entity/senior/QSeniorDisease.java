@@ -22,14 +22,6 @@ public class QSeniorDisease extends EntityPathBase<SeniorDisease> {
 
     public static final QSeniorDisease seniorDisease = new QSeniorDisease("seniorDisease");
 
-    public final com.springboot.new_java.data.entity.QBaseEntity _super = new com.springboot.new_java.data.entity.QBaseEntity(this);
-
-    //inherited
-    public final DateTimePath<java.time.LocalDateTime> created = _super.created;
-
-    //inherited
-    public final DateTimePath<java.time.LocalDateTime> deleted = _super.deleted;
-
     public final DatePath<java.time.LocalDate> diagnosisDate = createDate("diagnosisDate", java.time.LocalDate.class);
 
     public final com.springboot.new_java.data.entity.disease.QDisease disease;
@@ -41,9 +33,6 @@ public class QSeniorDisease extends EntityPathBase<SeniorDisease> {
     public final StringPath note = createString("note");
 
     public final QSenior senior;
-
-    //inherited
-    public final DateTimePath<java.time.LocalDateTime> updated = _super.updated;
 
     public QSeniorDisease(String variable) {
         this(SeniorDisease.class, forVariable(variable), INITS);

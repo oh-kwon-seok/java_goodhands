@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder
 @Table
-@Data
+
+
 public class User implements UserDetails {
 
     @Id
