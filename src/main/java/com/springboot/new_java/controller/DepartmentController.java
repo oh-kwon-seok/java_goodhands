@@ -53,7 +53,7 @@ public class DepartmentController extends AbstractSearchController<Department, D
         long start = System.currentTimeMillis();
         LOGGER.info("[departmentDto] : {}", departmentDto);
 
-        Department result = departmentService.insertDepartment(departmentDto);
+        Department result = departmentService.save(departmentDto);
 
         LOGGER.info("[createDepartment] response time: {}ms", System.currentTimeMillis() - start);
 
@@ -69,7 +69,7 @@ public class DepartmentController extends AbstractSearchController<Department, D
         long start = System.currentTimeMillis();
         LOGGER.info("[departmentDto] : {}", departmentDto);
 
-        Department result = departmentService.updateDepartment(departmentDto);
+        Department result = departmentService.update(departmentDto);
 
         LOGGER.info("[updateDepartment] response time: {}ms", System.currentTimeMillis() - start);
         return ResponseEntity.ok(CommonApiResponse.success(result, "부서 수정 성공"));
@@ -78,7 +78,7 @@ public class DepartmentController extends AbstractSearchController<Department, D
     @PostMapping(value = "/delete", consumes = "application/json", produces = "application/json")
     public ResponseEntity<CommonApiResponse<String>> deleteDepartment(@RequestBody Map<String, List<Long>> requestMap) {
         List<Long> uid = requestMap.get("uid");
-        departmentService.deleteDepartment(uid);
+        departmentService.delete(uid);
         return ResponseEntity.ok(CommonApiResponse.success("정상적으로 삭제되었습니다."));
     }
 }

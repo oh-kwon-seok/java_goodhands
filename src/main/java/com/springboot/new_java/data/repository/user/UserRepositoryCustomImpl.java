@@ -3,9 +3,12 @@ package com.springboot.new_java.data.repository.user;
 
 import ch.qos.logback.classic.Logger;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Predicate;
 import com.springboot.new_java.controller.SignController;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
+import com.springboot.new_java.data.entity.QDepartment;
+import com.springboot.new_java.data.entity.QEmployment;
 import com.springboot.new_java.data.entity.QUser;
 import com.springboot.new_java.data.entity.User;
 
@@ -13,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -27,7 +31,8 @@ public class UserRepositoryCustomImpl extends QuerydslRepositorySupport implemen
     @Override
     public List<User> findAll(CommonInfoSearchDto commonInfoSearchDto){
         QUser user = QUser.user;
-
+        QDepartment department = QDepartment.department;
+        QEmployment employment = QEmployment.employment;
 
         String filter_title = commonInfoSearchDto.getFilter_title();
         String search_text = commonInfoSearchDto.getSearch_text();
@@ -93,13 +98,20 @@ public class UserRepositoryCustomImpl extends QuerydslRepositorySupport implemen
         Predicate predicate = builder.getValue();
 
 
-        List<User> userList = from(user)
-
-                .select(user)
+        List<Tuple> results = from(user)
+                .leftJoin(user.department, department).fetchJoin()
+                .leftJoin(user.employment, employment).fetchJoin()
+                .select(user,department,employment)
                 .where(predicate,used)
                 .orderBy(user.name.desc()) // Order by created field in descending order
                 .fetch();
 
+        List<User> userList = new ArrayList<>();
+
+        for (Tuple result : results) {
+            User userEntity = result.get(user);
+            userList.add(userEntity);
+        }
         return userList;
 
     }

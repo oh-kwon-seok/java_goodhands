@@ -1,5 +1,7 @@
 package com.springboot.new_java.data.dto.user;
 
+import com.springboot.new_java.data.entity.Department;
+import com.springboot.new_java.data.entity.Employment;
 import lombok.*;
 
 import java.util.Map;
@@ -12,7 +14,7 @@ import java.util.Map;
 public class UserDto {
 
     private String id;
-    private Long company_uid;
+
     private Long employment_uid;
     private Long department_uid;
     private String password;
@@ -22,12 +24,15 @@ public class UserDto {
     private String auth;
     private Long used;
     private String token;
+    private Department department;
+    private Employment employment;
+
 
     private Map<String, Permission> menu; // 추가된 변수
 
-    public UserDto(String id, Long company_uid, Long employment_uid, Long department_uid, String password, String name, String email, String phone, String auth, Long used, String token, Map<String, Permission> menu) {
+    public UserDto(String id, Long employment_uid, Long department_uid, String password, String name, String email, String phone, String auth, Long used, String token, Map<String, Permission> menu, Department department, Employment employment) {
         this.id = id;
-        this.company_uid = company_uid;
+
         this.employment_uid = employment_uid;
         this.department_uid = department_uid;
         this.password = password;
@@ -38,5 +43,7 @@ public class UserDto {
         this.used = used;
         this.token = token;
         this.menu = menu;
+        this.department = department;
+        this.employment = employment;
     }
 }

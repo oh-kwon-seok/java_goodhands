@@ -10,6 +10,7 @@ import com.springboot.new_java.config.security.JwtTokenProvider;
 import com.springboot.new_java.data.dto.SignInResultDto;
 import com.springboot.new_java.data.dto.SignUpResultDto;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
+import com.springboot.new_java.data.dto.department.DepartmentDto;
 import com.springboot.new_java.data.dto.user.Permission;
 import com.springboot.new_java.data.dto.user.UserDto;
 import com.springboot.new_java.data.entity.*;
@@ -18,9 +19,11 @@ import com.springboot.new_java.data.repository.department.DepartmentRepository;
 import com.springboot.new_java.data.repository.employment.EmploymentRepository;
 import com.springboot.new_java.data.repository.history.HistoryRepository;
 import com.springboot.new_java.data.repository.user.UserRepository;
+import jakarta.transaction.Transactional;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +35,7 @@ import java.util.Optional;
 
 @Service
 
-public class SignService{
+public class SignService extends AbstractCacheableSearchService<User, UserDto>{
     private final Logger LOGGER = (Logger)LoggerFactory.getLogger(SignService.class);
 
 
@@ -45,10 +48,11 @@ public class SignService{
     public JwtTokenProvider jwtTokenProvider;
     public PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public SignService( UserRepository userRepository,  EmploymentRepository employmentRepository, DepartmentRepository departmentRepository,
-                           JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder, HistoryRepository historyRepository){
 
+    public SignService(UserRepository userRepository, EmploymentRepository employmentRepository, DepartmentRepository departmentRepository,
+                       JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder, HistoryRepository historyRepository, RedisTemplate<String, Object> redisTemplate,
+                       ObjectMapper objectMapper){
+        super(redisTemplate, objectMapper);
         this.userRepository = userRepository;
 
         this.employmentRepository = employmentRepository;
@@ -60,15 +64,93 @@ public class SignService{
 
     }
 
-    public List<User> getTotalUser(CommonInfoSearchDto commonInfoSearchDto) {
-        return userRepository.findAll(commonInfoSearchDto);
+    @Override
+    public String getEntityType() {
+        return "User";
+    }
+    @Override
+    public List<User> findAllBySearchCondition(CommonInfoSearchDto searchDto) {
+        return userRepository.findAll(searchDto);
+    }
+    @Override
+    protected String[] getRelatedEntityTypes() {
+        return new String[]{"Department", "Employment"};
     }
 
-    public List<User> getUser(CommonInfoSearchDto commonInfoSearchDto) {
-        return userRepository.findInfo(commonInfoSearchDto);
-    }
 
+    @Transactional
     public SignUpResultDto save(UserDto userDto) throws RuntimeException {
+        try {
+            SignUpResultDto result = performSave(userDto);
+
+            // 성공한 경우에만 캐시 무효화
+            if (result.isSuccess()) {
+                invalidateCachesAfterDataChange();
+                LOGGER.info("사용자 생성 후 캐시 무효화 완료: {}", userDto.getId());
+            }
+
+            return result;
+        } catch (Exception e) {
+            LOGGER.error("사용자 생성 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    @Transactional
+    public SignUpResultDto update(UserDto userDto) throws RuntimeException {
+        try {
+            SignUpResultDto result = performUpdate(userDto);
+
+            // 성공한 경우에만 캐시 무효화
+            if (result.isSuccess()) {
+                invalidateCachesAfterDataChange();
+                LOGGER.info("사용자 수정 후 캐시 무효화 완료: {}", userDto.getId());
+            }
+
+            return result;
+        } catch (Exception e) {
+            LOGGER.error("사용자 수정 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Transactional
+    public String excelUploadUser(List<Map<String, Object>> requestList) throws Exception {
+        try {
+            String result = performExcelUploadUser(requestList);
+
+            // 대량 처리 후 캐시 무효화
+            invalidateCachesAfterDataChange();
+            LOGGER.info("Excel 업로드 후 캐시 무효화 완료 - 처리된 사용자 수: {}", requestList.size());
+
+            return result;
+        } catch (Exception e) {
+            LOGGER.error("Excel 업로드 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @Transactional
+    public String delete(List<String> ids) throws Exception {
+        try {
+            String result = performDelete(ids);
+
+            // 삭제 후 캐시 무효화
+            invalidateCachesAfterDataChange();
+            LOGGER.info("사용자 삭제 후 캐시 무효화 완료 - 삭제된 사용자 수: {}", ids.size());
+
+            return result;
+        } catch (Exception e) {
+            LOGGER.error("사용자 삭제 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+
+
+
+
+
+    public SignUpResultDto performSave(UserDto userDto) throws RuntimeException {
 
 
         Employment employment = employmentRepository.findByUid(userDto.getEmployment_uid());
@@ -145,7 +227,7 @@ public class SignService{
     }
 
 
-    public  SignUpResultDto update(UserDto userDto) throws RuntimeException{
+    public  SignUpResultDto performUpdate(UserDto userDto) throws RuntimeException{
 
         Employment employment = employmentRepository.findByUid(userDto.getEmployment_uid());
         Department department = departmentRepository.findByUid(userDto.getDepartment_uid());
@@ -230,7 +312,7 @@ public class SignService{
     }
 
 
-    public String excelUploadUser(List<Map<String, Object>> requestList) throws Exception {
+    public String performExcelUploadUser(List<Map<String, Object>> requestList) throws Exception {
 
         for (Map<String, Object> data : requestList) {
 
@@ -366,7 +448,7 @@ public class SignService{
 
 
 
-    public String delete(List<String> ids) throws Exception {
+    public String performDelete(List<String> ids) throws Exception {
 
         for (String id : ids) {
             Optional<User> selectedUser = userRepository.findById(id);
@@ -391,6 +473,22 @@ public class SignService{
         result.setSuccess(false);
         result.setCode(CommonResponse.FAIL.getCode());
         result.setMsg(CommonResponse.FAIL.getMsg());
+    }
+
+    @Override
+    public UserDto convertToDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setEmail(user.getEmail());
+        dto.setPhone(user.getPhone());
+        Department department = departmentRepository.findByUid(user.getDepartment().getUid());
+        dto.setDepartment(department);
+        Employment employment = employmentRepository.findByUid(user.getEmployment().getUid());
+        dto.setEmployment(employment);
+
+
+        return dto;
     }
 
 

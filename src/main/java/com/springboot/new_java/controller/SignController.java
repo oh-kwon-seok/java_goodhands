@@ -2,18 +2,22 @@ package com.springboot.new_java.controller;
 
 
 import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.new_java.common.CommonApiResponse;
 import com.springboot.new_java.data.dto.SignInResultDto;
 import com.springboot.new_java.data.dto.SignUpResultDto;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
+import com.springboot.new_java.data.dto.department.DepartmentDto;
 import com.springboot.new_java.data.dto.user.UserDto;
 import com.springboot.new_java.data.entity.Department;
 import com.springboot.new_java.data.entity.User;
 
+import com.springboot.new_java.service.DepartmentService;
 import com.springboot.new_java.service.SignService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,39 +40,28 @@ import java.net.URL;
 
 
 @RequestMapping("/user")
-public class SignController {
+public class SignController extends AbstractSearchController<User, UserDto> {
     private final Logger LOGGER = (Logger) LoggerFactory.getLogger(SignController.class);
     private final SignService signService;
 
-    @Autowired
-    public SignController(SignService signService){
+//    @Autowired
+//    public SignController(SignService signService){
+//        this.signService = signService;
+//    }
+
+    public SignController(SignService signService,
+                                RedisTemplate<String, Object> redisTemplate,
+                                ObjectMapper objectMapper) {
+        super(signService, redisTemplate, objectMapper); // 이 줄이 필수!
+
         this.signService = signService;
-    }
-
-
-
-    @GetMapping(value= "/select")
-    public ResponseEntity<CommonApiResponse<List<User>>> getTotalUser(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) throws RuntimeException{
-        long currentTime = System.currentTimeMillis();
-
-        List<User> selectedTotalUser = signService.getTotalUser(commonInfoSearchDto);
-
-        LOGGER.info("[getTotalUser] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
-        return ResponseEntity.ok(CommonApiResponse.success(selectedTotalUser));
-    }
-    @GetMapping(value= "/info_select")
-    public ResponseEntity<CommonApiResponse<List<User>>> getUser(@ModelAttribute CommonInfoSearchDto commonInfoSearchDto) throws RuntimeException{
-
-        long currentTime = System.currentTimeMillis();
-
-        List<User> selectedTotalUser = signService.getUser(commonInfoSearchDto);
-
-        LOGGER.info("[getTotalUser] response Time: {}ms,{}", System.currentTimeMillis() - currentTime);
-
-        return ResponseEntity.ok(CommonApiResponse.success(selectedTotalUser));
 
     }
 
+    @Override
+    protected String getEntityPath() {
+        return "users";
+    }
 
 
 

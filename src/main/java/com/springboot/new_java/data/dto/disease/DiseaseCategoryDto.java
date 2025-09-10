@@ -16,22 +16,22 @@ public class DiseaseCategoryDto {
     private Long disease_category_uid;
     private String user_id;
     private String disease_checklist;
-    private Boolean is_chronic;
-    private Boolean is_disease_checklist;
+    private Boolean use_chronic;
+    private Boolean use_disease_checklist;
 
 
     private Boolean used;
     private String token;
 
 
-    public DiseaseCategoryDto(Long uid, String name, String code, String description, Long disease_category_uid, String user_id, String disease_checklist, Boolean used, Boolean is_disease_checklist, Boolean is_chronic, String token) {
+    public DiseaseCategoryDto(Long uid, String name, String code, String description, Long disease_category_uid, String user_id, String disease_checklist, Boolean used, Boolean use_disease_checklist, Boolean use_chronic, String token) {
         this.user_id = user_id;
         this.code = code;
         this.description = description;
         this.disease_category_uid = disease_category_uid;
         this.disease_checklist = disease_checklist;
-        this.is_chronic = is_chronic;
-        this.is_disease_checklist = is_disease_checklist;
+        this.use_chronic = use_chronic;
+        this.use_disease_checklist = use_disease_checklist;
         this.used = used;
         this.uid = uid;
         this.name = name;

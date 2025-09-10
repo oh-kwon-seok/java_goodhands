@@ -1,16 +1,15 @@
 package com.springboot.new_java.service;
 
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -86,22 +85,162 @@ public abstract class AbstractCacheableSearchService<T, D> implements CacheableS
         }
     }
 
+    /**
+     * 특정 검색 조건의 캐시 무효화
+     */
     public void invalidateSearchCache(CommonInfoSearchDto searchDto) {
-        String cacheKey = searchDto.toCacheKey(getEntityType());
-        redisTemplate.delete(cacheKey);
-        log.info("캐시 무효화: {}", cacheKey);
+        try {
+            String cacheKey = searchDto.toCacheKey(getEntityType());
+            Boolean deleted = redisTemplate.delete(cacheKey);
+
+            if (Boolean.TRUE.equals(deleted)) {
+                log.info("특정 캐시 무효화 성공: {}", cacheKey);
+            } else {
+                log.debug("캐시 키가 존재하지 않음: {}", cacheKey);
+            }
+        } catch (Exception e) {
+            log.error("특정 캐시 무효화 실패: {}", e.getMessage(), e);
+        }
     }
 
     /**
-     * 캐시 무효화 - 해당 엔티티의 모든 캐시
+     * 해당 엔티티의 모든 캐시 무효화
      */
     public void invalidateAllCaches() {
-        String pattern = getEntityType().toLowerCase() + ":*";
-        Set<String> keys = redisTemplate.keys(pattern);
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
-            log.info("모든 {} 캐시 무효화: {}개 키", getEntityType(), keys.size());
+        try {
+            String pattern = getEntityType().toLowerCase() + ":*";
+            Set<String> keys = redisTemplate.keys(pattern);
+
+            if (keys != null && !keys.isEmpty()) {
+                Long deletedCount = redisTemplate.delete(keys);
+                log.info("모든 {} 캐시 무효화 완료: {}개 키 삭제", getEntityType(), deletedCount);
+            } else {
+                log.debug("무효화할 {} 캐시가 없습니다", getEntityType());
+            }
+        } catch (Exception e) {
+            log.error("전체 캐시 무효화 실패 (entity: {}): {}", getEntityType(), e.getMessage(), e);
         }
+    }
+
+    /**
+     * 여러 엔티티 타입의 캐시를 일괄 무효화
+     */
+    public void invalidateMultipleEntityCaches(String... entityTypes) {
+        if (entityTypes == null || entityTypes.length == 0) {
+            log.warn("무효화할 엔티티 타입이 지정되지 않았습니다");
+            return;
+        }
+
+        try {
+            List<String> patterns = Arrays.stream(entityTypes)
+                    .map(entityType -> entityType.toLowerCase() + ":*")
+                    .collect(Collectors.toList());
+
+            int totalDeleted = 0;
+            for (String pattern : patterns) {
+                Set<String> keys = redisTemplate.keys(pattern);
+                if (keys != null && !keys.isEmpty()) {
+                    Long deletedCount = redisTemplate.delete(keys);
+                    totalDeleted += deletedCount != null ? deletedCount.intValue() : 0;
+                    log.debug("엔티티 타입별 캐시 무효화: {} - {}개 키", pattern, deletedCount);
+                }
+            }
+
+            log.info("다중 엔티티 캐시 무효화 완료: {} 타입, 총 {}개 키 삭제",
+                    entityTypes.length, totalDeleted);
+        } catch (Exception e) {
+            log.error("다중 엔티티 캐시 무효화 실패: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 관련 엔티티들의 캐시를 무효화 (오버라이드 가능)
+     */
+    protected void invalidateRelatedCaches() {
+        // 하위 클래스에서 필요에 따라 구현
+        // 예: User 엔티티가 변경되면 Department, Employment 캐시도 무효화
+        String[] relatedEntityTypes = getRelatedEntityTypes();
+        if (relatedEntityTypes != null && relatedEntityTypes.length > 0) {
+            invalidateMultipleEntityCaches(relatedEntityTypes);
+        }
+    }
+
+    /**
+     * 연관된 엔티티 타입들 반환 (하위 클래스에서 오버라이드)
+     */
+    protected String[] getRelatedEntityTypes() {
+        // 기본적으로는 관련 엔티티 없음
+        return new String[0];
+    }
+
+    /**
+     * 데이터 변경 후 자동 캐시 무효화 (CUD 작업 후 호출)
+     */
+    public void invalidateCachesAfterDataChange() {
+        try {
+            log.debug("데이터 변경 후 캐시 무효화 시작: {}", getEntityType());
+
+            // 1. 현재 엔티티의 모든 캐시 무효화
+            invalidateAllCaches();
+
+            // 2. 관련 엔티티 캐시 무효화
+            invalidateRelatedCaches();
+
+            log.info("데이터 변경 후 캐시 무효화 완료: {}", getEntityType());
+        } catch (Exception e) {
+            // 캐시 무효화 실패해도 비즈니스 로직에는 영향 없음
+            log.error("데이터 변경 후 캐시 무효화 중 오류 발생: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 캐시 상태 확인
+     */
+    public CacheStatus getCacheStatus() {
+        try {
+            String pattern = getEntityType().toLowerCase() + ":*";
+            Set<String> keys = redisTemplate.keys(pattern);
+            int totalKeys = keys != null ? keys.size() : 0;
+
+            return CacheStatus.builder()
+                    .entityType(getEntityType())
+                    .totalCacheKeys(totalKeys)
+                    .cachePattern(pattern)
+                    .build();
+        } catch (Exception e) {
+            log.error("캐시 상태 확인 실패: {}", e.getMessage(), e);
+            return CacheStatus.builder()
+                    .entityType(getEntityType())
+                    .totalCacheKeys(0)
+                    .error(e.getMessage())
+                    .build();
+        }
+    }
+
+    /**
+     * 캐시 워밍업 (자주 사용되는 검색 조건들을 미리 캐싱)
+     */
+    public void warmupCache(List<CommonInfoSearchDto> commonSearchConditions) {
+        if (commonSearchConditions == null || commonSearchConditions.isEmpty()) {
+            log.debug("워밍업할 검색 조건이 없습니다");
+            return;
+        }
+
+        log.info("캐시 워밍업 시작: {} 엔티티, {}개 검색 조건",
+                getEntityType(), commonSearchConditions.size());
+
+        int successCount = 0;
+        for (CommonInfoSearchDto searchDto : commonSearchConditions) {
+            try {
+                getDataWithCache(searchDto);
+                successCount++;
+            } catch (Exception e) {
+                log.warn("캐시 워밍업 실패 (검색조건: filter='{}', text='{}'): {}",
+                        searchDto.getFilter_title(), searchDto.getSearch_text(), e.getMessage());
+            }
+        }
+
+        log.info("캐시 워밍업 완료: {}/{} 성공", successCount, commonSearchConditions.size());
     }
 
     /**
@@ -117,6 +256,63 @@ public abstract class AbstractCacheableSearchService<T, D> implements CacheableS
             }
         } else {
             log.info("전체 조회 - Entity: {}, 결과: {}개", getEntityType(), results.size());
+        }
+    }
+
+    /**
+     * 캐시 상태 정보를 담는 클래스
+     */
+    public static class CacheStatus {
+        private String entityType;
+        private int totalCacheKeys;
+        private String cachePattern;
+        private String error;
+
+        // Builder pattern
+        public static CacheStatusBuilder builder() {
+            return new CacheStatusBuilder();
+        }
+
+        // Getters
+        public String getEntityType() { return entityType; }
+        public int getTotalCacheKeys() { return totalCacheKeys; }
+        public String getCachePattern() { return cachePattern; }
+        public String getError() { return error; }
+
+        public static class CacheStatusBuilder {
+            private String entityType;
+            private int totalCacheKeys;
+            private String cachePattern;
+            private String error;
+
+            public CacheStatusBuilder entityType(String entityType) {
+                this.entityType = entityType;
+                return this;
+            }
+
+            public CacheStatusBuilder totalCacheKeys(int totalCacheKeys) {
+                this.totalCacheKeys = totalCacheKeys;
+                return this;
+            }
+
+            public CacheStatusBuilder cachePattern(String cachePattern) {
+                this.cachePattern = cachePattern;
+                return this;
+            }
+
+            public CacheStatusBuilder error(String error) {
+                this.error = error;
+                return this;
+            }
+
+            public CacheStatus build() {
+                CacheStatus cacheStatus = new CacheStatus();
+                cacheStatus.entityType = this.entityType;
+                cacheStatus.totalCacheKeys = this.totalCacheKeys;
+                cacheStatus.cachePattern = this.cachePattern;
+                cacheStatus.error = this.error;
+                return cacheStatus;
+            }
         }
     }
 }
