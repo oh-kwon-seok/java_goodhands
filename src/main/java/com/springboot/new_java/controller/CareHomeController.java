@@ -45,7 +45,7 @@ public class CareHomeController extends AbstractSearchController<CareHome, CareH
         long start = System.currentTimeMillis();
         LOGGER.info("[careHomeDto] : {}", careHomeDto);
 
-        CareHome result = careHomeService.insertCareHome(careHomeDto);
+        CareHome result = careHomeService.save(careHomeDto);
 
         LOGGER.info("[createCareHome] response time: {}ms", System.currentTimeMillis() - start);
 
@@ -61,7 +61,7 @@ public class CareHomeController extends AbstractSearchController<CareHome, CareH
         long start = System.currentTimeMillis();
         LOGGER.info("[careHomeDto] : {}", careHomeDto);
 
-        CareHome result = careHomeService.updateCareHome(careHomeDto);
+        CareHome result = careHomeService.update(careHomeDto);
 
         LOGGER.info("[updateCareHome] response time: {}ms", System.currentTimeMillis() - start);
         return ResponseEntity.ok(CommonApiResponse.success(result, "부서 수정 성공"));
@@ -70,7 +70,7 @@ public class CareHomeController extends AbstractSearchController<CareHome, CareH
     @PostMapping(value = "/delete", consumes = "application/json", produces = "application/json")
     public ResponseEntity<CommonApiResponse<String>> deleteCareHome(@RequestBody Map<String, List<Long>> requestMap) {
         List<Long> uid = requestMap.get("uid");
-        careHomeService.deleteCareHome(uid);
+        careHomeService.delete(uid);
         return ResponseEntity.ok(CommonApiResponse.success("정상적으로 삭제되었습니다."));
     }
 }

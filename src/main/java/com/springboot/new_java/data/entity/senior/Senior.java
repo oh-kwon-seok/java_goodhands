@@ -42,7 +42,7 @@ public class Senior extends BaseEntity {
     private User caregiver;
 
     @Column(nullable = false)
-    private Boolean use_care_schedule;
+    private Boolean is_care_schedule;
 
     @Column
     private String care_schedule_protocol; // 케어 스케줄 생성규칙(주 1회 특정요일 + 기간 등 반복 유무)
@@ -55,7 +55,6 @@ public class Senior extends BaseEntity {
     @OneToMany(mappedBy = "senior", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore  // JSON 직렬화에서 제외
     private List<SeniorDisease> seniorDiseases = new ArrayList<>();
-
 
 
 }
