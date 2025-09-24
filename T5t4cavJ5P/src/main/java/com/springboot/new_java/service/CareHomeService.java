@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.dto.care.CareHomeDto;
 
-import com.springboot.new_java.data.dto.department.DepartmentDto;
+
 import com.springboot.new_java.data.entity.Department;
 import com.springboot.new_java.data.entity.User;
 import com.springboot.new_java.data.entity.care.CareHome;
@@ -14,6 +14,7 @@ import com.springboot.new_java.data.repository.careHome.CareHomeRepository;
 import com.springboot.new_java.data.repository.careHomeType.CareHomeTypeRepository;
 import com.springboot.new_java.data.repository.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,14 +55,52 @@ public class CareHomeService extends AbstractCacheableSearchService<CareHome, Ca
     public List<CareHome> findAllBySearchCondition(CommonInfoSearchDto searchDto) {
         return careHomeRepository.findAll(searchDto);
     }
-    @Override
-    public Duration getCacheTtl(CommonInfoSearchDto searchDto) {
-        return searchDto.hasSearchCondition()
-                ? Duration.ofMinutes(2)  // Department 검색은 2분
-                : Duration.ofMinutes(10); // Department 전체는 10분
+
+    @Transactional
+    public CareHome save(CareHomeDto careHomeDto) {
+        try {
+            // 1. CareHome 생성
+            CareHome savedCareHome = performSave(careHomeDto);
+            LOGGER.info("CareHome 생성 완료: ID={}, Name={}", savedCareHome.getUid(), savedCareHome.getName());
+
+            // 2. 캐시 무효화
+            invalidateCachesAfterDataChange();
+            LOGGER.info("CareHome 생성 후 캐시 무효화 완료: {}", savedCareHome.getUid());
+
+            return savedCareHome;
+
+        } catch (Exception e) {
+            LOGGER.error("CareHome 생성 (캐시 무효화 포함) 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("CareHome 생성에 실패했습니다: " + e.getMessage(), e);
+        }
     }
 
-    public CareHome insertCareHome(CareHomeDto careHomeDto) {
+    @Transactional
+    public CareHome update(CareHomeDto careHomeDto) {
+        try {
+            // 1. CareHome 수정
+            CareHome updatedCareHome = performUpdate(careHomeDto);
+
+            if (updatedCareHome == null) {
+                LOGGER.warn("수정할 CareHome를 찾을 수 없습니다: ID={}", careHomeDto.getUid());
+                return null;
+            }
+
+            LOGGER.info("CareHome 수정 완료: ID={}, Name={}", updatedCareHome.getUid(), updatedCareHome.getName());
+
+            // 2. 캐시 무효화
+            invalidateCachesAfterDataChange();
+            LOGGER.info("CareHome 수정 후 캐시 무효화 완료: {}", updatedCareHome.getUid());
+
+            return updatedCareHome;
+
+        } catch (Exception e) {
+            LOGGER.error("CareHome 수정 (캐시 무효화 포함) 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("CareHome 수정에 실패했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    public CareHome performSave(CareHomeDto careHomeDto) {
         CareHome careHome = new CareHome();
         String careHomeTypeName = careHomeDto.getName();
         CareHomeType careHomeType = careHomeTypeRepository.findByNameAndUsed(careHomeTypeName, true);
@@ -75,7 +115,7 @@ public class CareHomeService extends AbstractCacheableSearchService<CareHome, Ca
     }
 
 
-    public CareHome updateCareHome(CareHomeDto careHomeDto) {
+    public CareHome performUpdate(CareHomeDto careHomeDto) {
         CareHome careHome = careHomeRepository.findById(careHomeDto.getUid())
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 시설입니다."));
 
@@ -90,16 +130,39 @@ public class CareHomeService extends AbstractCacheableSearchService<CareHome, Ca
         return careHomeRepository.save(careHome);
     }
 
-    public String deleteCareHome(List<Long> uids) {
-        for (Long uid : uids) {
-            CareHome careHome = careHomeRepository.findById(uid)
-                    .orElseThrow(() -> new EntityNotFoundException("CareHome with UID " + uid + " not found."));
+    @Transactional
+    public int delete(List<Long> uids) {
+        try {
+            int deletedCount = 0;
 
-            careHome.setUsed(false);
-            careHome.setDeleted(LocalDateTime.now());
-            careHomeRepository.save(careHome);
+            for (Long uid : uids) {
+                Optional<CareHome> existingCareHome = careHomeRepository.findById(uid);
+                if (existingCareHome.isPresent()) {
+                    CareHome careHome = existingCareHome.get();
+                    careHome.setUsed(false);
+                    careHome.setDeleted(LocalDateTime.now());
+                    careHomeRepository.save(careHome);
+                    deletedCount++;
+                    LOGGER.debug("CareHome 삭제: ID={}", uid);
+                } else {
+                    LOGGER.warn("삭제할 CareHome를 찾을 수 없습니다: ID={}", uid);
+                }
+            }
+
+            LOGGER.info("CareHome 삭제 완료: {}개 삭제", deletedCount);
+
+            // 캐시 무효화 (삭제된 항목이 있을 때만)
+            if (deletedCount > 0) {
+                invalidateCachesAfterDataChange();
+                LOGGER.info("CareHome 삭제 후 캐시 무효화 완료");
+            }
+
+            return deletedCount;
+
+        } catch (Exception e) {
+            LOGGER.error("CareHome 삭제 (캐시 무효화 포함) 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("CareHome 삭제에 실패했습니다: " + e.getMessage(), e);
         }
-        return "CareHomes deleted successfully";
     }
 
 
@@ -108,6 +171,8 @@ public class CareHomeService extends AbstractCacheableSearchService<CareHome, Ca
         CareHomeDto dto = new CareHomeDto();
         dto.setUid(careHome.getUid());
         dto.setName(careHome.getName());
+        CareHomeType careHomeType = careHomeTypeRepository.findByUid(careHome.getCareHomeType().getUid());
+        dto.setCareHomeType(careHomeType);
 
         return dto;
     }
