@@ -381,12 +381,18 @@ public class SignService extends AbstractCacheableSearchService<User, UserDto>{
             user.setMenu(menuAsString);
 
 
+            List<String> authorities = user.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+
+
             SignInResultDto signInResultDto = SignInResultDto.builder()
                     .token(jwtTokenProvider.createToken(String.valueOf(user.getId()),user.getAuth()))
                     .menu(user.getMenu())
                     .name(user.getName())
                     .email(user.getEmail())
                     .phone(user.getPhone())
+                    .auth(String.join(", ", authorities))
                     .build();
 
             LOGGER.info("[getSignInResult] SignInResultDto 객체에 값 주입 lgoger: {}",signInResultDto);

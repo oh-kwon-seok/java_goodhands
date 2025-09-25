@@ -55,11 +55,11 @@ public class CareScheduleRepositoryCustomImpl extends QuerydslRepositorySupport 
 
         }
         Predicate predicate = builder.getValue();
-
+        Predicate used = CareSchedule.used.eq(true);
 
         List<CareSchedule> CareScheduleList = from(CareSchedule)
                 .select(CareSchedule)
-                .where(predicate)
+                .where(predicate,used)
                 .fetch();
 
         return CareScheduleList;

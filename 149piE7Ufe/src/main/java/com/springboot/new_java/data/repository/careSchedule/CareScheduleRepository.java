@@ -17,6 +17,6 @@ public interface CareScheduleRepository extends JpaRepository<CareSchedule,Long>
 
 
 
-    boolean existsBySeniorUidAndCareReserveDate(Long seniorUid, String careReserveDate);
+    boolean existsBySeniorUidAndCareReserveDateAndUsed(Long seniorUid, String careReserveDate, boolean used);
     long countByCareReserveDateBetween(String startDate, String endDate);
 }
