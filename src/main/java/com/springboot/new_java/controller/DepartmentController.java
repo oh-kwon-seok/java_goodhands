@@ -3,26 +3,13 @@ package com.springboot.new_java.controller;
 import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.new_java.common.CommonApiResponse;
-import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
 import com.springboot.new_java.data.dto.department.DepartmentDto;
-import com.springboot.new_java.data.dto.senior.SeniorDto;
-import com.springboot.new_java.data.entity.Department;
-import com.springboot.new_java.service.DepartmentService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 

@@ -1,5 +1,4 @@
 package com.springboot.new_java.data.repository;
-import com.springboot.new_java.data.entity.Sns;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -4,8 +4,6 @@ import ch.qos.logback.classic.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.new_java.common.CommonApiResponse;
 import com.springboot.new_java.data.dto.employment.EmploymentDto;
-import com.springboot.new_java.data.entity.Employment;
-import com.springboot.new_java.service.EmploymentService;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
