@@ -1,0 +1,107 @@
+package com.springboot.new_java.data.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+
+
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table
+
+
+public class User  {
+
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long uid;
+
+    @Column( unique = true)
+    private String id;
+
+    @Column(name = "kakao_id", unique = true)
+    private Long kakaoId;  // 가디언,케어기버만 해당됌
+
+    @Column
+    private String birth_date;  // 생년월일
+
+
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
+
+    private String name;
+
+    private String email;
+    private String phone;
+
+    private String auth;
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime created;
+
+    @LastModifiedDate
+    private LocalDateTime updated;
+
+    @LastModifiedDate
+    private LocalDateTime deleted;
+
+    private Boolean used;
+
+    @Column
+    private Boolean profile_completed; // 프로필 완성 여부
+
+    @Column
+    private String menu; // JSON 데이터를 저장하는 필드
+
+
+    // 추가: JSON 직렬화/역직렬화 메서드
+    public Map<String, Object> getMenuAsMap() {
+        if (menu == null) {
+            return new HashMap<>();
+        }
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            return objectMapper.readValue(menu, Map.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return new HashMap<>();
+        }
+    }
+
+    public void setMenuFromMap(Map<String, Object> menuMap) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            this.menu = objectMapper.writeValueAsString(menuMap);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    // 카카오 사용자인지 확인
+    public boolean isKakaoUser() {
+
+        return this.kakaoId != null && (this.auth == "ROLE_CARE" || this.auth == "ROLE_GUARDIAN") ;
+    }
+
+    // 일반 사용자인지 확인
+    public boolean isGeneralUser() {
+        return this.id != null && (this.auth == "ROLE_ADMIN" ) ;
+    }
+}

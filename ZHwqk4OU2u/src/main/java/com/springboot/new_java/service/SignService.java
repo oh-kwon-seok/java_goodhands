@@ -1,0 +1,359 @@
+package com.springboot.new_java.service;
+
+
+import ch.qos.logback.classic.Logger;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.springboot.new_java.common.CommonResponse;
+import com.springboot.new_java.config.security.JwtTokenProvider;
+
+import com.springboot.new_java.data.dto.SignInResultDto;
+import com.springboot.new_java.data.dto.SignUpResultDto;
+import com.springboot.new_java.data.dto.common.CommonInfoSearchDto;
+
+import com.springboot.new_java.data.dto.user.Permission;
+import com.springboot.new_java.data.dto.user.UserDto;
+import com.springboot.new_java.data.entity.*;
+
+
+import com.springboot.new_java.data.repository.history.HistoryRepository;
+import com.springboot.new_java.data.repository.user.UserRepository;
+import jakarta.transaction.Transactional;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+
+public class SignService extends AbstractCacheableSearchService<User, UserDto>{
+    private final Logger LOGGER = (Logger)LoggerFactory.getLogger(SignService.class);
+
+
+    public UserRepository userRepository;
+
+    public HistoryRepository historyRepository;
+    public JwtTokenProvider jwtTokenProvider;
+    public PasswordEncoder passwordEncoder;
+
+
+    public SignService(UserRepository userRepository,
+                       JwtTokenProvider jwtTokenProvider, PasswordEncoder passwordEncoder, HistoryRepository historyRepository, RedisTemplate<String, Object> redisTemplate,
+                       ObjectMapper objectMapper){
+        super(redisTemplate, objectMapper);
+        this.userRepository = userRepository;
+        this.historyRepository = historyRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.passwordEncoder = passwordEncoder;
+
+    }
+
+    @Override
+    public String getEntityType() {
+        return "User";
+    }
+    @Override
+    public List<User> findAllBySearchCondition(CommonInfoSearchDto searchDto) {
+        return userRepository.findAll(searchDto);
+    }
+    @Override
+    protected String[] getRelatedEntityTypes() {
+        return new String[]{"Department", "Employment"};
+    }
+
+
+    @Transactional
+    public SignUpResultDto save(UserDto userDto) throws RuntimeException {
+        try {
+            SignUpResultDto result = performSave(userDto);
+
+            // 성공한 경우에만 캐시 무효화
+            if (result.isSuccess()) {
+                invalidateCachesAfterDataChange();
+                LOGGER.info("사용자 생성 후 캐시 무효화 완료: {}", userDto.getId());
+            }
+
+            return result;
+        } catch (Exception e) {
+            LOGGER.error("사용자 생성 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+    @Transactional
+    public SignUpResultDto update(UserDto userDto) throws RuntimeException {
+        try {
+            SignUpResultDto result = performUpdate(userDto);
+
+            // 성공한 경우에만 캐시 무효화
+            if (result.isSuccess()) {
+                invalidateCachesAfterDataChange();
+                LOGGER.info("사용자 수정 후 캐시 무효화 완료: {}", userDto.getId());
+            }
+
+            return result;
+        } catch (Exception e) {
+            LOGGER.error("사용자 수정 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+
+
+    @Transactional
+    public String delete(List<String> ids) throws Exception {
+        try {
+            String result = performDelete(ids);
+
+            // 삭제 후 캐시 무효화
+            invalidateCachesAfterDataChange();
+            LOGGER.info("사용자 삭제 후 캐시 무효화 완료 - 삭제된 사용자 수: {}", ids.size());
+
+            return result;
+        } catch (Exception e) {
+            LOGGER.error("사용자 삭제 중 오류 발생: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+
+
+
+
+
+    public SignUpResultDto performSave(UserDto userDto) throws RuntimeException {
+
+        String id = userDto.getId();
+        String name = userDto.getName();
+        String password = userDto.getPassword();
+        String email = userDto.getEmail();
+        String phone = userDto.getPhone();
+        String auth = userDto.getAuth();
+        Optional<User> selectedUser = userRepository.findById(userDto.getId());
+        Map<String, Permission> menu = userDto.getMenu(); // Permission 데이터 구조
+
+        LOGGER.info("[selectUser] : {}", selectedUser);
+
+        User user;
+        SignUpResultDto signUpResultDto = new SignUpResultDto();
+
+        if (selectedUser.isPresent()) {
+            setFailResult(signUpResultDto);
+            return signUpResultDto;
+        } else {
+            ObjectMapper objectMapper = new ObjectMapper();
+            String menuJson = ""; // menu 데이터를 JSON 문자열로 변환
+            try {
+                menuJson = objectMapper.writeValueAsString(menu);
+            } catch (JsonProcessingException e) {
+                LOGGER.error("Error serializing menu data: {}", e.getMessage());
+                throw new RuntimeException("Failed to serialize menu data", e);
+            }
+
+                user = User.builder()
+                        .id(id)
+                        .name(name)
+
+                        .password(passwordEncoder.encode(password))
+                        .email(email)
+                        .phone(phone)
+                        .auth(auth)
+                        .menu(menuJson) // menu 데이터 설정
+                        .created(LocalDateTime.now())
+                        .used(true)
+                        .build();
+                userRepository.save(user);
+
+                setSuccessResult(signUpResultDto);
+                return signUpResultDto;
+
+        }
+    }
+
+
+    public  SignUpResultDto performUpdate(UserDto userDto) throws RuntimeException{
+
+
+        String id = userDto.getId();
+        String name = userDto.getName();
+        String password = userDto.getPassword();
+
+
+        String email = userDto.getEmail();
+        String phone = userDto.getPhone();
+        String auth = userDto.getAuth();
+
+
+        Optional<User> selectedUser = Optional.ofNullable(userRepository.getById(userDto.getId()));
+
+        Map<String, Permission> menu = userDto.getMenu(); // Permission 데이터 구조
+
+        User user;
+        SignUpResultDto signUpResultDto = new SignUpResultDto();
+
+        if(selectedUser.isPresent()){
+            ObjectMapper objectMapper = new ObjectMapper();
+            String menuJson = ""; // menu 데이터를 JSON 문자열로 변환
+            try {
+                menuJson = objectMapper.writeValueAsString(menu);
+            } catch (JsonProcessingException e) {
+                LOGGER.error("Error serializing menu data: {}", e.getMessage());
+                throw new RuntimeException("Failed to serialize menu data", e);
+            }
+
+                user = User.builder()
+                        .id(id)
+                        .name(name)
+                        .password(passwordEncoder.encode(password))
+                        .email(email)
+                        .phone(phone)
+                        .auth(auth)
+                        .menu(menuJson)
+                        .updated(LocalDateTime.now())
+                        .used(true)
+                        .build();
+                userRepository.save(user);
+                // UserItem 저장
+
+                setSuccessResult(signUpResultDto);
+                return signUpResultDto;
+
+        }else{
+            setFailResult(signUpResultDto);
+            return signUpResultDto;
+
+
+        }
+
+    }
+
+    public SignInResultDto generalSignIn(String id,String password,String clientIp) throws RuntimeException{
+        LOGGER.info("[getSignInResult] signDateHandler로 회원 정보 요청");
+        User user = userRepository.getById(id);
+        LOGGER.info("[getSignInResult] Id : {}",user);
+        LOGGER.info("[getByID] id: {}",user);
+
+        LOGGER.info("[String clientIp] String clientIp: {}",clientIp);
+        LOGGER.info("[getSignInResult] 패스워드 비교 수행 : {}",passwordEncoder.matches(password, user.getPassword()));
+
+        if(user == null || !passwordEncoder.matches(password, user.getPassword()))  {
+            SignInResultDto signInResultDto = new SignInResultDto();
+
+            LOGGER.info("[getSignInResult] in : {}",signInResultDto);
+            setFailResult(signInResultDto);
+            return signInResultDto;
+        }else if(user != null && (passwordEncoder.matches(password, user.getPassword()))){
+            LOGGER.info("[getSignInResult] 패스워드 일치");
+            LOGGER.info("[getSignInResult] SignInResultDto 객체 생성");
+            History history = new History();
+            history.setName("로그인");
+            history.setIp(clientIp);
+            history.setUser(user);
+
+            history.setCreated(LocalDateTime.now());
+
+            History insertHistory = historyRepository.save(history);
+
+            // menu를 JSON 문자열로 변환
+            ObjectMapper objectMapper = new ObjectMapper();
+            String menuAsString;
+            try {
+                menuAsString = objectMapper.writeValueAsString(user.getMenu());
+            } catch (Exception e) {
+                throw new RuntimeException("Invalid menu format", e);
+            }
+
+
+            user.setMenu(menuAsString);
+
+
+
+
+
+            SignInResultDto signInResultDto = SignInResultDto.builder()
+                    .token(jwtTokenProvider.createToken(String.valueOf(user.getId()), Collections.singletonList(user.getAuth())))
+                    .menu(user.getMenu())
+                    .name(user.getName())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .auth(user.getAuth())
+                    .build();
+
+            LOGGER.info("[getSignInResult] SignInResultDto 객체에 값 주입 lgoger: {}",signInResultDto);
+            setSuccessResult(signInResultDto);
+            return signInResultDto;
+        }else{
+            throw new RuntimeException();
+        }
+
+    }
+
+    public SignInResultDto signIn(String loginType, String identifier, String password, String clientIp) {
+        if ("kakao".equals(loginType)) {
+            // 카카오 로그인은 KakaoAuthService에서 처리
+            throw new IllegalArgumentException("카카오 로그인은 별도 엔드포인트를 사용하세요");
+        } else {
+            // 일반 로그인
+            return generalSignIn(identifier, password, clientIp);
+        }
+    }
+
+
+
+
+
+
+    public String performDelete(List<String> ids) throws Exception {
+
+        for (String id : ids) {
+            Optional<User> selectedUser = userRepository.findById(id);
+            if (selectedUser.isPresent()) {
+                User user = selectedUser.get();
+                user.setUsed(false);
+                user.setDeleted(LocalDateTime.now());
+                userRepository.save(user);
+            } else {
+                throw new Exception("USER with UID " + id + " not found.");
+            }
+        }
+        return "USER deleted successfully";
+    }
+
+    private void setSuccessResult(SignUpResultDto result){
+        result.setSuccess(true);
+        result.setCode(CommonResponse.SUCCESS.getCode());
+        result.setMsg(CommonResponse.SUCCESS.getMsg());
+    }
+    private void setFailResult(SignUpResultDto result){
+        result.setSuccess(false);
+        result.setCode(CommonResponse.FAIL.getCode());
+        result.setMsg(CommonResponse.FAIL.getMsg());
+    }
+
+    @Override
+    public UserDto convertToDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setEmail(user.getEmail());
+        dto.setPhone(user.getPhone());
+
+        dto.setAuth(user.getAuth());
+        dto.setCreated(user.getCreated());
+
+
+        return dto;
+    }
+
+
+
+}
